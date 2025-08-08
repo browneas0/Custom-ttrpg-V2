@@ -1,0 +1,35 @@
+<div class="reset-settings">
+  <h3>Reset System Settings</h3>
+  
+  <p>Use the buttons below to reset individual settings or all settings to their default values.</p>
+  
+  <div class="settings-list">
+    {{#each settings}}
+      <div class="setting-item">
+        <div class="setting-info">
+          <strong>{{name}}</strong>
+          <div class="setting-values">
+            <span class="current-value">Current: {{current}}</span>
+            <span class="default-value">Default: {{default}}</span>
+          </div>
+        </div>
+        <button type="button" class="reset-setting-btn ctt-btn" 
+                data-setting="{{key}}" 
+                data-name="{{name}}" 
+                data-default="{{default}}">
+          <i class="fas fa-undo"></i> Reset
+        </button>
+      </div>
+    {{/each}}
+  </div>
+  
+  <div class="reset-all-section">
+    <button type="button" id="reset-all-btn" class="ctt-btn">
+      <i class="fas fa-trash"></i> Reset All Settings
+    </button>
+  </div>
+  
+  <div class="warning">
+    <p><i class="fas fa-exclamation-triangle"></i> Warning: This action cannot be undone!</p>
+  </div>
+</div>

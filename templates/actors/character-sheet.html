@@ -1,0 +1,287 @@
+<form class="custom-sheet" autocomplete="off">
+  <!-- Header -->
+  <header class="sheet-header">
+    <div class="header-fields">
+      <div class="charname">
+        <input name="name" type="text" value="{{actor.name}}" placeholder="Character Name"/>
+      </div>
+      <div class="class-level-info">
+        <div class="class-display">{{actor.system.class}}</div>
+        <div class="level-display">
+          <label>Level:</label>
+          <input name="system.level" type="number" value="{{actor.system.level}}" min="1" max="20"/>
+        </div>
+        <div class="xp-display">
+          <label>XP:</label>
+          <input name="system.experience" type="number" value="{{actor.system.experience}}" min="0"/>
+        </div>
+        <button type="button" id="ctt-btn-info" title="Class Information">
+          <i class="fas fa-info-circle"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="sheet-tabs" data-group="primary">
+    <a class="item active" data-tab="attributes">Attributes</a>
+    <a class="item" data-tab="combat">Combat</a>
+    <a class="item" data-tab="resources">Resources</a>
+    <a class="item" data-tab="features">Features</a>
+    <a class="item" data-tab="spells">Spells</a>
+    <a class="item" data-tab="notes">Notes</a>
+  </nav>
+
+  <!-- Tab Content -->
+  <section class="sheet-body">
+    <!-- Attributes Tab -->
+    <div class="tab attributes" data-group="primary" data-tab="attributes">
+      <h3>Attributes</h3>
+      
+      <div class="attributes-grid">
+        <!-- Health -->
+        <div class="attribute-block health">
+          <label>Health</label>
+          <div class="attribute-value">
+            <input name="system.attributes.hp.value" type="number" value="{{actor.system.attributes.hp.value}}" min="0"/>
+            <span class="separator">/</span>
+            <span class="max-value">{{actor.system.attributes.hp.max}}</span>
+          </div>
+          {{#if attributeEffects.END}}
+            <div class="attribute-effect">{{attributeEffects.END}}</div>
+          {{/if}}
+        </div>
+
+        <!-- Strength -->
+        <div class="attribute-block">
+          <label>Strength</label>
+          <div class="attribute-value">
+            <input name="system.attributes.str.value" type="number" value="{{actor.system.attributes.str.value}}" min="1" max="20"/>
+            <span class="separator">/</span>
+            <input name="system.attributes.str.max" type="number" value="{{actor.system.attributes.str.max}}" min="1" max="20"/>
+          </div>
+          {{#if attributeEffects.STR}}
+            <div class="attribute-effect">{{attributeEffects.STR}}</div>
+          {{/if}}
+        </div>
+
+        <!-- Dexterity -->
+        <div class="attribute-block">
+          <label>Dexterity</label>
+          <div class="attribute-value">
+            <input name="system.attributes.dex.value" type="number" value="{{actor.system.attributes.dex.value}}" min="1" max="20"/>
+            <span class="separator">/</span>
+            <input name="system.attributes.dex.max" type="number" value="{{actor.system.attributes.dex.max}}" min="1" max="20"/>
+          </div>
+          {{#if attributeEffects.DEX}}
+            <div class="attribute-effect">{{attributeEffects.DEX}}</div>
+          {{/if}}
+        </div>
+
+        <!-- Endurance -->
+        <div class="attribute-block">
+          <label>Endurance</label>
+          <div class="attribute-value">
+            <input name="system.attributes.end.value" type="number" value="{{actor.system.attributes.end.value}}" min="1" max="20"/>
+            <span class="separator">/</span>
+            <input name="system.attributes.end.max" type="number" value="{{actor.system.attributes.end.max}}" min="1" max="20"/>
+          </div>
+          {{#if attributeEffects.END}}
+            <div class="attribute-effect">{{attributeEffects.END}}</div>
+          {{/if}}
+        </div>
+
+        <!-- Wisdom -->
+        <div class="attribute-block">
+          <label>Wisdom</label>
+          <div class="attribute-value">
+            <input name="system.attributes.wis.value" type="number" value="{{actor.system.attributes.wis.value}}" min="1" max="20"/>
+            <span class="separator">/</span>
+            <input name="system.attributes.wis.max" type="number" value="{{actor.system.attributes.wis.max}}" min="1" max="20"/>
+          </div>
+          {{#if attributeEffects.WIS}}
+            <div class="attribute-effect">{{attributeEffects.WIS}}</div>
+          {{/if}}
+        </div>
+
+        <!-- Intelligence -->
+        <div class="attribute-block">
+          <label>Intelligence</label>
+          <div class="attribute-value">
+            <input name="system.attributes.int.value" type="number" value="{{actor.system.attributes.int.value}}" min="1" max="20"/>
+            <span class="separator">/</span>
+            <input name="system.attributes.int.max" type="number" value="{{actor.system.attributes.int.max}}" min="1" max="20"/>
+          </div>
+          {{#if attributeEffects.INT}}
+            <div class="attribute-effect">{{attributeEffects.INT}}</div>
+          {{/if}}
+        </div>
+
+        <!-- Charisma -->
+        <div class="attribute-block">
+          <label>Charisma</label>
+          <div class="attribute-value">
+            <input name="system.attributes.cha.value" type="number" value="{{actor.system.attributes.cha.value}}" min="1" max="20"/>
+            <span class="separator">/</span>
+            <input name="system.attributes.cha.max" type="number" value="{{actor.system.attributes.cha.max}}" min="1" max="20"/>
+          </div>
+          {{#if attributeEffects.CHA}}
+            <div class="attribute-effect">{{attributeEffects.CHA}}</div>
+          {{/if}}
+        </div>
+
+        <!-- Critical Roll -->
+        <div class="attribute-block">
+          <label>Critical Roll</label>
+          <div class="attribute-value">
+            <input name="system.attributes.crit" type="number" value="{{actor.system.attributes.crit}}" min="1" max="20"/>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Combat Tab -->
+    <div class="tab combat" data-group="primary" data-tab="combat">
+      <h3>Combat Statistics</h3>
+      
+      <div class="combat-grid">
+        <div class="combat-stat">
+          <label>Attack Bonus</label>
+          <div class="value">{{actor.system.combat.attackBonus}}</div>
+        </div>
+        
+        <div class="combat-stat">
+          <label>Defense Rating</label>
+          <div class="value">{{actor.system.combat.defense}}</div>
+        </div>
+        
+        <div class="combat-stat">
+          <label>Damage Bonus</label>
+          <div class="value">{{actor.system.combat.damageBonus}}</div>
+        </div>
+        
+        <div class="combat-stat">
+          <label>Damage Dice</label>
+          <input name="system.combat.damageDice" type="text" value="{{actor.system.combat.damageDice}}"/>
+        </div>
+        
+        <div class="combat-stat">
+          <label>Utility Dice</label>
+          <input name="system.combat.utilityDice" type="text" value="{{actor.system.combat.utilityDice}}"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resources Tab -->
+    <div class="tab resources" data-group="primary" data-tab="resources">
+      <h3>Class Resources</h3>
+      
+      {{#if actor.system.resources}}
+        <div class="resources-grid">
+          {{#each actor.system.resources}}
+            <div class="resource-block">
+              <div class="resource-header">
+                <label>{{this.description}}</label>
+                <div class="resource-controls">
+                  <button type="button" class="resource-btn decrease" data-action="decrease" data-resource="{{@key}}">-</button>
+                  <span class="resource-value">{{this.value}}/{{this.max}}</span>
+                  <button type="button" class="resource-btn increase" data-action="increase" data-resource="{{@key}}">+</button>
+                </div>
+              </div>
+              <div class="resource-bar">
+                <div class="resource-fill" style="width: {{resourcePercent this.value this.max}}%; background-color: var(--ctt-{{this.color}})"></div>
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      {{else}}
+        <div class="no-resources">
+          <p>No class resources available.</p>
+        </div>
+      {{/if}}
+      
+      <div class="level-up-section">
+        <button type="button" class="level-up ctt-btn">
+          <i class="fas fa-arrow-up"></i> Level Up
+        </button>
+      </div>
+    </div>
+
+    <!-- Features Tab -->
+    <div class="tab features" data-group="primary" data-tab="features">
+      <h3>Class Features</h3>
+      
+      {{#if classFeatures}}
+        <div class="features-list">
+          {{#each classFeatures}}
+            <div class="feature-item">
+              <div class="feature-header">
+                <h4>{{@key}}</h4>
+                <span class="feature-level">Level {{this.level}}</span>
+              </div>
+              <div class="feature-description">{{this.description}}</div>
+            </div>
+          {{/each}}
+        </div>
+      {{else}}
+        <div class="no-features">
+          <p>No class features available.</p>
+        </div>
+      {{/if}}
+    </div>
+
+    <!-- Spells Tab -->
+    <div class="tab spells" data-group="primary" data-tab="spells">
+      <h3>Spells & Abilities</h3>
+      
+      {{#if spells}}
+        {{#if (eq actor.system.class "Monk")}}
+          <!-- Monk has categorized spells -->
+          {{#each spells}}
+            <div class="spell-category">
+              <h4>{{@key}}</h4>
+              <div class="spells-grid">
+                {{#each this}}
+                  <div class="spell-item">
+                    <div class="spell-header">
+                      <h5>{{this.name}}</h5>
+                      {{#if this.type}}<span class="spell-type">{{this.type}}</span>{{/if}}
+                      {{#if this.tier}}<span class="spell-tier">Tier {{this.tier}}</span>{{/if}}
+                    </div>
+                    {{#if this.cost}}<div class="spell-cost">Cost: {{this.cost}}</div>{{/if}}
+                    <div class="spell-effect">{{this.effect}}</div>
+                    {{#if this.scaling}}<div class="spell-scaling">Scaling: {{this.scaling}}</div>{{/if}}
+                  </div>
+                {{/each}}
+              </div>
+            </div>
+          {{/each}}
+        {{else}}
+          <!-- Other classes have simple spell lists -->
+          <div class="spells-grid">
+            {{#each spells}}
+              <div class="spell-item">
+                <div class="spell-header">
+                  <h5>{{this}}</h5>
+                </div>
+              </div>
+            {{/each}}
+          </div>
+        {{/if}}
+      {{else}}
+        <div class="no-spells">
+          <p>No spells available for this class.</p>
+        </div>
+      {{/if}}
+    </div>
+
+    <!-- Notes Tab -->
+    <div class="tab notes" data-group="primary" data-tab="notes">
+      <h3>Notes</h3>
+      
+      <div class="notes-section">
+        <textarea name="system.notes" rows="10" placeholder="Enter character notes here...">{{actor.system.notes}}</textarea>
+      </div>
+    </div>
+  </section>
+</form>

@@ -1,0 +1,704 @@
+<div class="abilities-manager">
+    <div class="abilities-header">
+        <h2><i class="fas fa-magic"></i> Abilities Manager</h2>
+        <div class="character-info">
+            <span class="character-name">{{actor.name}}</span>
+            <span class="character-level">Level {{actor.system.level}}</span>
+            <span class="character-class">{{actor.system.class}}</span>
+        </div>
+    </div>
+
+    <div class="abilities-layout">
+        <!-- Resource Trackers Panel -->
+        <div class="resource-trackers-panel">
+            <h3>Resource Trackers</h3>
+            <div class="resource-trackers">
+                {{#each resourceTrackers}}
+                    <div class="resource-tracker" data-resource="{{name}}" title="Click to edit">
+                        <div class="resource-header">
+                            <span class="resource-name">{{name}}</span>
+                            <span class="resource-values">{{current}}/{{max}}</span>
+                        </div>
+                        <div class="resource-bar">
+                            <div class="resource-fill" style="width: {{percentage}}%"></div>
+                        </div>
+                    </div>
+                {{/each}}
+            </div>
+
+            <!-- Class Features Section -->
+            <div class="class-features-section">
+                <h4>{{classFeatures.name}}</h4>
+                <div class="class-features">
+                    {{#each classFeatures.features}}
+                        <div class="class-feature">
+                            <div class="feature-icon" style="color: {{color}}">
+                                <i class="{{icon}}"></i>
+                            </div>
+                            <div class="feature-info">
+                                <span class="feature-name">{{name}}</span>
+                                {{#if description}}
+                                    <span class="feature-description">{{description}}</span>
+                                {{/if}}
+                                {{#if current}}
+                                    <div class="feature-resource">
+                                        <span class="feature-current">{{current}}</span>
+                                        <span class="feature-separator">/</span>
+                                        <span class="feature-max">{{max}}</span>
+                                    </div>
+                                {{/if}}
+                            </div>
+                        </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+
+        <!-- Abilities Panel -->
+        <div class="abilities-panel">
+            <div class="abilities-header-controls">
+                <div class="search-container">
+                    <input type="text" id="ability-search" placeholder="Search abilities...">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="filter-container">
+                    <select id="ability-filter">
+                        <option value="all">All Categories</option>
+                        {{#each abilityCategories}}
+                            <option value="{{@key}}">{{name}}</option>
+                        {{/each}}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Ability Category Tabs -->
+            <div class="ability-category-tabs">
+                {{#each abilityCategories}}
+                    <div class="ability-category-tab {{#if @first}}active{{/if}}" data-category="{{@key}}">
+                        <i class="{{icon}}" style="color: {{color}}"></i>
+                        <span>{{name}}</span>
+                    </div>
+                {{/each}}
+            </div>
+
+            <!-- Ability Categories Content -->
+            <div class="ability-categories-content">
+                {{#each abilityCategories}}
+                    <div class="ability-category {{#if @first}}active{{/if}}" data-category="{{@key}}">
+                        <div class="ability-list">
+                            {{#each (lookup ../abilities @key)}}
+                                <div class="ability-item" data-ability-id="{{id}}" data-ability-name="{{name}}" data-ability-category="{{category}}">
+                                    <div class="ability-header">
+                                        <div class="ability-icon" style="color: {{color}}">
+                                            <i class="fas fa-{{#if (eq category 'combat')}}sword{{else if (eq category 'utility')}}tools{{else if (eq category 'defensive')}}shield{{else if (eq category 'offensive')}}fire{{else if (eq category 'support')}}heart{{else if (eq category 'movement')}}running{{else}}star{{/if}}"></i>
+                                        </div>
+                                        <div class="ability-info">
+                                            <span class="ability-name">{{name}}</span>
+                                            <span class="ability-type">{{type}}</span>
+                                        </div>
+                                        <div class="ability-controls">
+                                            <button class="use-ability" data-ability-id="{{id}}" title="Use Ability">
+                                                <i class="fas fa-play"></i>
+                                            </button>
+                                            <button class="remove-ability" data-ability-id="{{id}}" title="Remove Ability">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    {{#if cost}}
+                                        <div class="ability-cost">
+                                            {{#each cost}}
+                                                <span class="cost-item">{{@key}}: {{this}}</span>
+                                            {{/each}}
+                                        </div>
+                                    {{/if}}
+                                    
+                                    {{#if cooldown}}
+                                        <div class="ability-cooldown">
+                                            <i class="fas fa-clock"></i>
+                                            <span>{{cooldown}}s</span>
+                                        </div>
+                                    {{/if}}
+
+                                    {{#if (lookup ../abilityCooldowns id)}}
+                                        <div class="cooldown-overlay">
+                                            <div class="cooldown-timer">
+                                                <span>{{lookup ../abilityCooldowns id 'remaining'}}</span>
+                                            </div>
+                                            <div class="cooldown-bar">
+                                                <div class="cooldown-fill" style="width: {{lookup ../abilityCooldowns id 'percentage'}}%"></div>
+                                            </div>
+                                        </div>
+                                    {{/if}}
+                                </div>
+                            {{/each}}
+                        </div>
+                    </div>
+                {{/each}}
+            </div>
+        </div>
+
+        <!-- Available Abilities Panel -->
+        <div class="available-abilities-panel">
+            <h3>Available Abilities</h3>
+            <div class="available-abilities-list">
+                {{#each availableAbilities}}
+                    <div class="available-ability-item" data-ability-id="{{id}}" data-ability-name="{{name}}" data-ability-category="{{category}}">
+                        <div class="ability-header">
+                            <div class="ability-icon" style="color: {{#if (eq category 'combat')}}#ff4444{{else if (eq category 'utility')}}#44ff44{{else if (eq category 'defensive')}}#4444ff{{else if (eq category 'offensive')}}#ff8800{{else if (eq category 'support')}}#ff44ff{{else if (eq category 'movement')}}#44ffff{{else}}#ffff44{{/if}}">
+                                <i class="fas fa-{{#if (eq category 'combat')}}sword{{else if (eq category 'utility')}}tools{{else if (eq category 'defensive')}}shield{{else if (eq category 'offensive')}}fire{{else if (eq category 'support')}}heart{{else if (eq category 'movement')}}running{{else}}star{{/if}}"></i>
+                            </div>
+                            <div class="ability-info">
+                                <span class="ability-name">{{name}}</span>
+                                <span class="ability-type">{{type}}</span>
+                                <span class="ability-category">{{category}}</span>
+                            </div>
+                            <div class="ability-controls">
+                                <button class="add-ability" data-ability-id="{{id}}" title="Add to Character">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {{#if description}}
+                            <div class="ability-description">
+                                {{description}}
+                            </div>
+                        {{/if}}
+                        
+                        {{#if cost}}
+                            <div class="ability-cost">
+                                {{#each cost}}
+                                    <span class="cost-item">{{@key}}: {{this}}</span>
+                                {{/each}}
+                            </div>
+                        {{/if}}
+                        
+                        {{#if cooldown}}
+                            <div class="ability-cooldown">
+                                <i class="fas fa-clock"></i>
+                                <span>{{cooldown}}s</span>
+                            </div>
+                        {{/if}}
+                    </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.abilities-manager {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #e8e8e8;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.abilities-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 2px solid #4a90e2;
+}
+
+.abilities-header h2 {
+    margin: 0;
+    color: #4a90e2;
+    font-size: 1.5em;
+}
+
+.character-info {
+    display: flex;
+    gap: 20px;
+    font-size: 0.9em;
+}
+
+.character-name {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.abilities-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr 350px;
+    gap: 20px;
+    padding: 20px;
+    height: calc(100% - 80px);
+}
+
+/* Resource Trackers Panel */
+.resource-trackers-panel {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid #4a90e2;
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.resource-trackers-panel h3 {
+    margin: 0 0 15px 0;
+    color: #4a90e2;
+    text-align: center;
+}
+
+.resource-trackers {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.resource-tracker {
+    background: rgba(74, 144, 226, 0.1);
+    border: 1px solid #4a90e2;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.resource-tracker:hover {
+    background: rgba(74, 144, 226, 0.2);
+    transform: translateX(5px);
+}
+
+.resource-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.resource-name {
+    font-weight: bold;
+    color: #e8e8e8;
+}
+
+.resource-values {
+    color: #ffd700;
+    font-size: 0.9em;
+}
+
+.resource-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.resource-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4a90e2, #357abd);
+    transition: width 0.3s ease;
+}
+
+/* Class Features Section */
+.class-features-section {
+    flex: 1;
+}
+
+.class-features-section h4 {
+    margin: 0 0 15px 0;
+    color: #ffd700;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+.class-features {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.class-feature {
+    display: flex;
+    align-items: center;
+    background: rgba(74, 144, 226, 0.1);
+    border: 1px solid #4a90e2;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.feature-icon {
+    font-size: 1.5em;
+    margin-right: 10px;
+    width: 30px;
+    text-align: center;
+}
+
+.feature-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-name {
+    font-weight: bold;
+    color: #e8e8e8;
+    margin-bottom: 2px;
+}
+
+.feature-description {
+    font-size: 0.8em;
+    color: #b0b0b0;
+    margin-bottom: 2px;
+}
+
+.feature-resource {
+    font-size: 0.9em;
+    color: #ffd700;
+}
+
+.feature-current {
+    font-weight: bold;
+}
+
+.feature-separator {
+    margin: 0 3px;
+}
+
+.feature-max {
+    opacity: 0.7;
+}
+
+/* Abilities Panel */
+.abilities-panel {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid #4a90e2;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.abilities-header-controls {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    border-bottom: 1px solid #4a90e2;
+}
+
+.search-container {
+    flex: 1;
+    position: relative;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 8px 30px 8px 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #4a90e2;
+    border-radius: 5px;
+    color: #e8e8e8;
+}
+
+.search-container i {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4a90e2;
+}
+
+.filter-container select {
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #4a90e2;
+    border-radius: 5px;
+    color: #e8e8e8;
+}
+
+.ability-category-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid #4a90e2;
+}
+
+.ability-category-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-right: 1px solid #4a90e2;
+}
+
+.ability-category-tab:last-child {
+    border-right: none;
+}
+
+.ability-category-tab:hover {
+    background: rgba(74, 144, 226, 0.2);
+}
+
+.ability-category-tab.active {
+    background: rgba(74, 144, 226, 0.3);
+    border-bottom: 3px solid #4a90e2;
+}
+
+.ability-category-tab i {
+    font-size: 1.2em;
+    margin-bottom: 5px;
+}
+
+.ability-category-tab span {
+    font-size: 0.8em;
+    text-align: center;
+}
+
+.ability-categories-content {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.ability-category {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: none;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.ability-category.active {
+    display: block;
+}
+
+.ability-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ability-item {
+    background: rgba(74, 144, 226, 0.1);
+    border: 1px solid #4a90e2;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.ability-item:hover {
+    background: rgba(74, 144, 226, 0.2);
+    transform: translateX(5px);
+}
+
+.ability-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.ability-icon {
+    font-size: 1.2em;
+    margin-right: 10px;
+    width: 25px;
+    text-align: center;
+}
+
+.ability-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.ability-name {
+    font-weight: bold;
+    color: #e8e8e8;
+    margin-bottom: 2px;
+}
+
+.ability-type {
+    font-size: 0.8em;
+    color: #b0b0b0;
+}
+
+.ability-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.ability-controls button {
+    width: 25px;
+    height: 25px;
+    background: rgba(74, 144, 226, 0.3);
+    border: 1px solid #4a90e2;
+    border-radius: 4px;
+    color: #e8e8e8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.ability-controls button:hover {
+    background: rgba(74, 144, 226, 0.5);
+    transform: scale(1.1);
+}
+
+.use-ability:hover {
+    background: rgba(0, 255, 0, 0.3) !important;
+    border-color: #00ff00 !important;
+}
+
+.remove-ability:hover {
+    background: rgba(255, 0, 0, 0.3) !important;
+    border-color: #ff0000 !important;
+}
+
+.ability-cost {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.cost-item {
+    font-size: 0.8em;
+    color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.ability-cooldown {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8em;
+    color: #ff8800;
+}
+
+.ability-cooldown i {
+    font-size: 0.9em;
+}
+
+/* Cooldown Overlay */
+.cooldown-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.cooldown-timer {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #ff8800;
+    margin-bottom: 10px;
+}
+
+.cooldown-bar {
+    width: 80%;
+    height: 4px;
+    background: rgba(255, 136, 0, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.cooldown-fill {
+    height: 100%;
+    background: #ff8800;
+    transition: width 0.3s ease;
+}
+
+/* Available Abilities Panel */
+.available-abilities-panel {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid #4a90e2;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.available-abilities-panel h3 {
+    margin: 0;
+    padding: 15px;
+    color: #4a90e2;
+    text-align: center;
+    border-bottom: 1px solid #4a90e2;
+}
+
+.available-abilities-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.available-ability-item {
+    background: rgba(74, 144, 226, 0.1);
+    border: 1px solid #4a90e2;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.available-ability-item:hover {
+    background: rgba(74, 144, 226, 0.2);
+    transform: translateX(5px);
+}
+
+.available-ability-item .ability-description {
+    font-size: 0.8em;
+    color: #b0b0b0;
+    margin: 8px 0;
+    line-height: 1.4;
+}
+
+.available-ability-item .ability-category {
+    font-size: 0.7em;
+    color: #4a90e2;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+.add-ability:hover {
+    background: rgba(0, 255, 0, 0.3) !important;
+    border-color: #00ff00 !important;
+}
+
+/* Scrollbar styling */
+.ability-category::-webkit-scrollbar,
+.available-abilities-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ability-category::-webkit-scrollbar-track,
+.available-abilities-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.ability-category::-webkit-scrollbar-thumb,
+.available-abilities-list::-webkit-scrollbar-thumb {
+    background: #4a90e2;
+    border-radius: 4px;
+}
+
+.ability-category::-webkit-scrollbar-thumb:hover,
+.available-abilities-list::-webkit-scrollbar-thumb:hover {
+    background: #357abd;
+}
+</style>

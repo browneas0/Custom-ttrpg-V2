@@ -1,0 +1,13 @@
+{
+  "LANGUAGE": "English",
+  "SYSTEM.Title": "Custom TTRPG System",
+  "SYSTEM.Description": "Professional modular TTRPG system with equipment, abilities, and compendium managers.",
+  "UI.EquipmentManager": "Equipment Manager",
+  "UI.AbilitiesManager": "Abilities Manager",
+  "UI.CompendiumManager": "Compendium Manager",
+  "UI.InventoryManager": "Inventory",
+  "UI.SpellManager": "Spells",
+  "UI.CombatTracker": "Combat Tracker",
+  "UI.FeatManager": "Feats"
+}
+

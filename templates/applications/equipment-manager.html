@@ -1,0 +1,631 @@
+<div class="equipment-manager">
+    <div class="equipment-header">
+        <h2><i class="fas fa-shield-alt"></i> Equipment Manager</h2>
+        <div class="character-info">
+            <span class="character-name">{{actor.name}}</span>
+            <span class="character-level">Level {{actor.system.level}}</span>
+            <span class="character-class">{{actor.system.class}}</span>
+        </div>
+    </div>
+
+    <div class="equipment-layout">
+        <!-- Character Model and Equipment Slots -->
+        <div class="character-model-section">
+            <div class="character-model">
+                <div class="model-container">
+                    <!-- Equipment Slots positioned around character model -->
+                    <div class="equipment-slot head-slot" data-slot="head" title="Head">
+                        <i class="fas fa-helmet-battle"></i>
+                        {{#if equipmentSlots.head.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.head.item.id}}">
+                                <span class="item-name">{{equipmentSlots.head.item.name}}</span>
+                                <button class="unequip-item" data-slot="head" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot neck-slot" data-slot="neck" title="Neck">
+                        <i class="fas fa-gem"></i>
+                        {{#if equipmentSlots.neck.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.neck.item.id}}">
+                                <span class="item-name">{{equipmentSlots.neck.item.name}}</span>
+                                <button class="unequip-item" data-slot="neck" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot shoulders-slot" data-slot="shoulders" title="Shoulders">
+                        <i class="fas fa-shield-alt"></i>
+                        {{#if equipmentSlots.shoulders.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.shoulders.item.id}}">
+                                <span class="item-name">{{equipmentSlots.shoulders.item.name}}</span>
+                                <button class="unequip-item" data-slot="shoulders" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot chest-slot" data-slot="chest" title="Chest">
+                        <i class="fas fa-tshirt"></i>
+                        {{#if equipmentSlots.chest.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.chest.item.id}}">
+                                <span class="item-name">{{equipmentSlots.chest.item.name}}</span>
+                                <button class="unequip-item" data-slot="chest" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot back-slot" data-slot="back" title="Back">
+                        <i class="fas fa-scroll"></i>
+                        {{#if equipmentSlots.back.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.back.item.id}}">
+                                <span class="item-name">{{equipmentSlots.back.item.name}}</span>
+                                <button class="unequip-item" data-slot="back" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot wrists-slot" data-slot="wrists" title="Wrists">
+                        <i class="fas fa-bracelet"></i>
+                        {{#if equipmentSlots.wrists.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.wrists.item.id}}">
+                                <span class="item-name">{{equipmentSlots.wrists.item.name}}</span>
+                                <button class="unequip-item" data-slot="wrists" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot hands-slot" data-slot="hands" title="Hands">
+                        <i class="fas fa-hand-paper"></i>
+                        {{#if equipmentSlots.hands.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.hands.item.id}}">
+                                <span class="item-name">{{equipmentSlots.hands.item.name}}</span>
+                                <button class="unequip-item" data-slot="hands" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot waist-slot" data-slot="waist" title="Waist">
+                        <i class="fas fa-belt"></i>
+                        {{#if equipmentSlots.waist.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.waist.item.id}}">
+                                <span class="item-name">{{equipmentSlots.waist.item.name}}</span>
+                                <button class="unequip-item" data-slot="waist" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot legs-slot" data-slot="legs" title="Legs">
+                        <i class="fas fa-socks"></i>
+                        {{#if equipmentSlots.legs.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.legs.item.id}}">
+                                <span class="item-name">{{equipmentSlots.legs.item.name}}</span>
+                                <button class="unequip-item" data-slot="legs" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot feet-slot" data-slot="feet" title="Feet">
+                        <i class="fas fa-boot"></i>
+                        {{#if equipmentSlots.feet.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.feet.item.id}}">
+                                <span class="item-name">{{equipmentSlots.feet.item.name}}</span>
+                                <button class="unequip-item" data-slot="feet" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot mainhand-slot" data-slot="mainHand" title="Main Hand">
+                        <i class="fas fa-sword"></i>
+                        {{#if equipmentSlots.mainHand.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.mainHand.item.id}}">
+                                <span class="item-name">{{equipmentSlots.mainHand.item.name}}</span>
+                                <button class="unequip-item" data-slot="mainHand" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot offhand-slot" data-slot="offHand" title="Off Hand">
+                        <i class="fas fa-shield"></i>
+                        {{#if equipmentSlots.offHand.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.offHand.item.id}}">
+                                <span class="item-name">{{equipmentSlots.offHand.item.name}}</span>
+                                <button class="unequip-item" data-slot="offHand" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot ring1-slot" data-slot="ring1" title="Ring 1">
+                        <i class="fas fa-ring"></i>
+                        {{#if equipmentSlots.ring1.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.ring1.item.id}}">
+                                <span class="item-name">{{equipmentSlots.ring1.item.name}}</span>
+                                <button class="unequip-item" data-slot="ring1" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot ring2-slot" data-slot="ring2" title="Ring 2">
+                        <i class="fas fa-ring"></i>
+                        {{#if equipmentSlots.ring2.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.ring2.item.id}}">
+                                <span class="item-name">{{equipmentSlots.ring2.item.name}}</span>
+                                <button class="unequip-item" data-slot="ring2" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot trinket1-slot" data-slot="trinket1" title="Trinket 1">
+                        <i class="fas fa-gem"></i>
+                        {{#if equipmentSlots.trinket1.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.trinket1.item.id}}">
+                                <span class="item-name">{{equipmentSlots.trinket1.item.name}}</span>
+                                <button class="unequip-item" data-slot="trinket1" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <div class="equipment-slot trinket2-slot" data-slot="trinket2" title="Trinket 2">
+                        <i class="fas fa-gem"></i>
+                        {{#if equipmentSlots.trinket2.item}}
+                            <div class="equipped-item" data-item-id="{{equipmentSlots.trinket2.item.id}}">
+                                <span class="item-name">{{equipmentSlots.trinket2.item.name}}</span>
+                                <button class="unequip-item" data-slot="trinket2" title="Unequip">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/if}}
+                    </div>
+
+                    <!-- Character Silhouette -->
+                    <div class="character-silhouette">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipment Stats Panel -->
+        <div class="equipment-stats-panel">
+            <h3>Equipment Stats</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Attack:</span>
+                    <span class="stat-value">{{stats.attack}}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Defense:</span>
+                    <span class="stat-value">{{stats.defense}}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Magic:</span>
+                    <span class="stat-value">{{stats.magic}}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Health:</span>
+                    <span class="stat-value">{{stats.health}}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Mana:</span>
+                    <span class="stat-value">{{stats.mana}}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Stamina:</span>
+                    <span class="stat-value">{{stats.stamina}}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Crit Chance:</span>
+                    <span class="stat-value">{{stats.critChance}}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Crit Damage:</span>
+                    <span class="stat-value">{{stats.critDamage}}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Dodge:</span>
+                    <span class="stat-value">{{stats.dodge}}%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Block:</span>
+                    <span class="stat-value">{{stats.block}}%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item Browser -->
+        <div class="item-browser">
+            <div class="browser-header">
+                <h3>Available Items</h3>
+                <div class="search-container">
+                    <input type="text" id="item-search" placeholder="Search items...">
+                    <i class="fas fa-search"></i>
+                </div>
+            </div>
+            
+            <div class="item-list">
+                {{#each availableItems}}
+                    <div class="item-entry" data-item-id="{{id}}" data-item-name="{{name}}" draggable="true">
+                        <div class="item-icon">
+                            <i class="fas fa-{{#if (eq type 'weapon')}}sword{{else if (eq type 'armor')}}shield-alt{{else}}gem{{/if}}"></i>
+                        </div>
+                        <div class="item-info">
+                            <span class="item-name">{{name}}</span>
+                            <span class="item-type">{{type}}</span>
+                            <span class="item-rarity rarity-{{rarity}}">{{rarity}}</span>
+                        </div>
+                        <div class="item-stats-preview">
+                            {{#if stats}}
+                                {{#each stats}}
+                                    <span class="stat-preview">{{@key}}: {{this}}</span>
+                                {{/each}}
+                            {{/if}}
+                        </div>
+                    </div>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.equipment-manager {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: #e8e8e8;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.equipment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 2px solid #4a90e2;
+}
+
+.equipment-header h2 {
+    margin: 0;
+    color: #4a90e2;
+    font-size: 1.5em;
+}
+
+.character-info {
+    display: flex;
+    gap: 20px;
+    font-size: 0.9em;
+}
+
+.character-name {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.equipment-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px 400px;
+    gap: 20px;
+    padding: 20px;
+    height: calc(100% - 80px);
+}
+
+.character-model-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.character-model {
+    position: relative;
+    width: 400px;
+    height: 500px;
+}
+
+.model-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 2px solid #4a90e2;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.character-silhouette {
+    font-size: 8em;
+    color: #4a90e2;
+    opacity: 0.3;
+    z-index: 1;
+}
+
+.equipment-slot {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: rgba(74, 144, 226, 0.2);
+    border: 2px solid #4a90e2;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.equipment-slot:hover {
+    background: rgba(74, 144, 226, 0.4);
+    transform: scale(1.1);
+}
+
+.equipment-slot.drag-over {
+    background: rgba(255, 215, 0, 0.4);
+    border-color: #ffd700;
+    transform: scale(1.2);
+}
+
+.equipment-slot i {
+    font-size: 1.2em;
+    color: #4a90e2;
+}
+
+.equipped-item {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    background: rgba(0, 255, 0, 0.2);
+    border: 2px solid #00ff00;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    text-align: center;
+    padding: 2px;
+}
+
+.equipped-item .item-name {
+    font-size: 0.6em;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.unequip-item {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    background: #ff4444;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 0.6em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Equipment slot positions */
+.head-slot { top: 20px; left: 50%; transform: translateX(-50%); }
+.neck-slot { top: 80px; left: 50%; transform: translateX(-50%); }
+.shoulders-slot { top: 140px; left: 50%; transform: translateX(-50%); }
+.chest-slot { top: 200px; left: 50%; transform: translateX(-50%); }
+.back-slot { top: 260px; left: 50%; transform: translateX(-50%); }
+.wrists-slot { top: 320px; left: 50%; transform: translateX(-50%); }
+.hands-slot { top: 380px; left: 50%; transform: translateX(-50%); }
+.waist-slot { top: 440px; left: 50%; transform: translateX(-50%); }
+.legs-slot { top: 500px; left: 50%; transform: translateX(-50%); }
+.feet-slot { top: 560px; left: 50%; transform: translateX(-50%); }
+
+.mainhand-slot { top: 300px; left: 20px; }
+.offhand-slot { top: 300px; right: 20px; }
+.ring1-slot { top: 200px; left: 20px; }
+.ring2-slot { top: 200px; right: 20px; }
+.trinket1-slot { top: 400px; left: 20px; }
+.trinket2-slot { top: 400px; right: 20px; }
+
+.equipment-stats-panel {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid #4a90e2;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.equipment-stats-panel h3 {
+    margin: 0 0 15px 0;
+    color: #4a90e2;
+    text-align: center;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 10px;
+    background: rgba(74, 144, 226, 0.1);
+    border-radius: 5px;
+}
+
+.stat-label {
+    color: #b0b0b0;
+}
+
+.stat-value {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.item-browser {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid #4a90e2;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.browser-header {
+    padding: 15px;
+    border-bottom: 1px solid #4a90e2;
+}
+
+.browser-header h3 {
+    margin: 0 0 10px 0;
+    color: #4a90e2;
+}
+
+.search-container {
+    position: relative;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 8px 30px 8px 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #4a90e2;
+    border-radius: 5px;
+    color: #e8e8e8;
+}
+
+.search-container i {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4a90e2;
+}
+
+.item-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.item-entry {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 5px;
+    background: rgba(74, 144, 226, 0.1);
+    border: 1px solid #4a90e2;
+    border-radius: 5px;
+    cursor: grab;
+    transition: all 0.3s ease;
+}
+
+.item-entry:hover {
+    background: rgba(74, 144, 226, 0.2);
+    transform: translateX(5px);
+}
+
+.item-entry:active {
+    cursor: grabbing;
+}
+
+.item-icon {
+    margin-right: 10px;
+    font-size: 1.2em;
+    color: #4a90e2;
+}
+
+.item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.item-name {
+    font-weight: bold;
+    color: #e8e8e8;
+}
+
+.item-type {
+    font-size: 0.8em;
+    color: #b0b0b0;
+}
+
+.item-rarity {
+    font-size: 0.7em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.rarity-common { background: #666; color: white; }
+.rarity-uncommon { background: #2d5; color: white; }
+.rarity-rare { background: #25f; color: white; }
+.rarity-epic { background: #a2f; color: white; }
+.rarity-legendary { background: #f82; color: white; }
+
+.item-stats-preview {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.7em;
+    color: #b0b0b0;
+}
+
+.stat-preview {
+    margin: 1px 0;
+}
+
+/* Scrollbar styling */
+.item-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.item-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.item-list::-webkit-scrollbar-thumb {
+    background: #4a90e2;
+    border-radius: 4px;
+}
+
+.item-list::-webkit-scrollbar-thumb:hover {
+    background: #357abd;
+}
+</style>

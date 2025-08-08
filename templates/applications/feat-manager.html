@@ -1,0 +1,154 @@
+<div class="feat-manager">
+  <!-- Header -->
+  <div class="feat-header">
+    <h2>Feat Manager - {{actor.name}}</h2>
+    <div class="character-info">
+      <span class="class-badge">{{class}} Level {{level}}</span>
+      <span class="feat-points">Feat Points: {{featPoints}}</span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="feat-content">
+    <!-- Available Feats -->
+    <div class="available-feats">
+      <h3>Available Feats</h3>
+      
+      {{#each availableFeats}}
+        <div class="feat-category">
+          <div class="category-header">
+            <button type="button" class="category-filter" data-category="{{@key}}">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+            <h4>{{@key}} Feats</h4>
+          </div>
+          
+          <div class="feats-list">
+            {{#each this}}
+              <div class="feat-item {{#if (eq ../selectedFeat.id this.id)}}selected{{/if}}" 
+                   data-feat-id="{{this.id}}" 
+                   data-category="{{../key}}">
+                <div class="feat-header">
+                  <h5>{{this.name}}</h5>
+                  <span class="feat-cost">{{this.cost}} point(s)</span>
+                </div>
+                <div class="feat-prerequisites">
+                  <strong>Prerequisites:</strong> {{this.prerequisites}}
+                </div>
+                <div class="feat-description">{{this.description}}</div>
+                <div class="feat-benefits">
+                  <strong>Benefits:</strong>
+                  <ul>
+                    {{#each this.benefits}}
+                      <li>{{this}}</li>
+                    {{/each}}
+                  </ul>
+                </div>
+              </div>
+            {{/each}}
+          </div>
+        </div>
+      {{/each}}
+    </div>
+
+    <!-- Feat Details Panel -->
+    <div class="feat-details-panel">
+      <h3>Feat Details</h3>
+      
+      {{#if selectedFeat}}
+        <div class="selected-feat">
+          <div class="feat-details">
+            <h4>{{selectedFeat.name}}</h4>
+            <p><strong>Category:</strong> {{selectedFeat.category}}</p>
+            <p><strong>Cost:</strong> {{selectedFeat.cost}} feat point(s)</p>
+            <p><strong>Prerequisites:</strong> {{selectedFeat.prerequisites}}</p>
+            <p><strong>Description:</strong></p>
+            <div class="feat-description">{{selectedFeat.description}}</div>
+            <p><strong>Benefits:</strong></p>
+            <ul>
+              {{#each selectedFeat.benefits}}
+                <li>{{this}}</li>
+              {{/each}}
+            </ul>
+          </div>
+          
+          <div class="feat-controls">
+            {{#if canTakeFeat}}
+              <button type="button" id="take-feat-btn" class="ctt-btn take-feat">
+                <i class="fas fa-plus"></i> Take Feat
+              </button>
+            {{else}}
+              <div class="cannot-take-feat">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Cannot take this feat (insufficient points or prerequisites not met)</span>
+              </div>
+            {{/if}}
+          </div>
+        </div>
+      {{else}}
+        <div class="no-feat-selected">
+          <p>Select a feat to view details.</p>
+          <div class="feat-tips">
+            <h5>Feat Tips:</h5>
+            <ul>
+              <li>Feat points are earned at levels 4, 8, 12, 16, and 20</li>
+              <li>Some feats have prerequisites that must be met</li>
+              <li>Feats provide permanent character improvements</li>
+              <li>Choose feats that complement your character's playstyle</li>
+            </ul>
+          </div>
+        </div>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Character Feats -->
+  <div class="character-feats">
+    <h3>Your Feats</h3>
+    
+    {{#if characterFeats.length}}
+      <div class="character-feats-list">
+        {{#each characterFeats}}
+          <div class="character-feat-item">
+            <div class="feat-info">
+              <div class="feat-header">
+                <h5>{{this.name}}</h5>
+                <span class="feat-category-badge">{{this.category}}</span>
+                <span class="feat-level">Level {{this.levelTaken}}</span>
+              </div>
+              <div class="feat-description">{{this.description}}</div>
+              <div class="feat-benefits">
+                <strong>Benefits:</strong>
+                <ul>
+                  {{#each this.benefits}}
+                    <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+              </div>
+            </div>
+            
+            <div class="feat-controls">
+              <button type="button" class="remove-feat-btn ctt-btn" 
+                      data-feat-id="{{this.id}}" 
+                      title="Remove Feat">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <div class="no-character-feats">
+        <p>You haven't taken any feats yet.</p>
+        <p>Use your feat points to acquire powerful abilities and customize your character!</p>
+      </div>
+    {{/if}}
+  </div>
+
+  <!-- Footer -->
+  <div class="feat-footer">
+    <div class="feat-info">
+      <p><i class="fas fa-info-circle"></i> Feat system allows for deep character customization and progression!</p>
+    </div>
+  </div>
+</div>

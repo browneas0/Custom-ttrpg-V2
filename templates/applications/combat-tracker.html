@@ -1,0 +1,173 @@
+<div class="combat-tracker">
+  <!-- Header -->
+  <div class="combat-header">
+    <h2>Combat Tracker</h2>
+    <div class="combat-info">
+      {{#if isActive}}
+        <span class="round-display">Round {{round}}</span>
+        <span class="turn-display">Turn {{add currentTurn 1}} of {{combatants.length}}</span>
+      {{else}}
+        <span class="combat-status">Combat Not Active</span>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Combat Controls -->
+  <div class="combat-controls">
+    {{#if isActive}}
+      <button type="button" id="end-combat-btn" class="ctt-btn end-combat">
+        <i class="fas fa-stop"></i> End Combat
+      </button>
+      <button type="button" id="previous-turn-btn" class="ctt-btn previous-turn">
+        <i class="fas fa-step-backward"></i> Previous Turn
+      </button>
+      <button type="button" id="next-turn-btn" class="ctt-btn next-turn">
+        <i class="fas fa-step-forward"></i> Next Turn
+      </button>
+    {{else}}
+      <button type="button" id="start-combat-btn" class="ctt-btn start-combat">
+        <i class="fas fa-play"></i> Start Combat
+      </button>
+    {{/if}}
+    <button type="button" id="add-combatant-btn" class="ctt-btn add-combatant">
+      <i class="fas fa-plus"></i> Add Combatant
+    </button>
+  </div>
+
+  <!-- Current Turn Display -->
+  {{#if isActive}}
+    <div class="current-turn-display">
+      <div class="current-combatant">
+        <h3>Current Turn</h3>
+        <div class="combatant-card current">
+          <div class="combatant-name">{{currentCombatant.name}}</div>
+          <div class="combatant-type">{{capitalize currentCombatant.type}}</div>
+          <div class="combatant-stats">
+            <span class="hp-display">{{currentCombatant.currentHp}}/{{currentCombatant.maxHp}} HP</span>
+            <span class="ac-display">AC {{currentCombatant.ac}}</span>
+            <span class="initiative-display">Initiative {{currentCombatant.initiative}}</span>
+          </div>
+          {{#if currentCombatant.statusEffects.length}}
+            <div class="status-effects">
+              {{#each currentCombatant.statusEffects}}
+                <span class="status-badge" title="Duration: {{duration}} rounds">{{name}}</span>
+              {{/each}}
+            </div>
+          {{/if}}
+        </div>
+      </div>
+      
+      {{#if nextCombatant}}
+        <div class="next-combatant">
+          <h4>Next Turn</h4>
+          <div class="combatant-card next">
+            <div class="combatant-name">{{nextCombatant.name}}</div>
+            <div class="combatant-type">{{capitalize nextCombatant.type}}</div>
+          </div>
+        </div>
+      {{/if}}
+    </div>
+  {{/if}}
+
+  <!-- Combatants List -->
+  <div class="combatants-section">
+    <h3>Combatants</h3>
+    
+    {{#if combatants.length}}
+      <div class="combatants-list">
+        {{#each combatants}}
+          <div class="combatant-entry {{#if (eq @index ../currentTurn)}}current-turn{{/if}}" 
+               data-combatant-id="{{this.id}}">
+            
+            <!-- Turn Indicator -->
+            {{#if (eq @index ../currentTurn)}}
+              <div class="turn-indicator">
+                <i class="fas fa-play"></i>
+              </div>
+            {{else}}
+              <div class="turn-number">{{add @index 1}}</div>
+            {{/if}}
+            
+            <!-- Combatant Info -->
+            <div class="combatant-info">
+              <div class="combatant-header">
+                <span class="combatant-name">{{this.name}}</span>
+                <span class="combatant-type-badge {{this.type}}">{{capitalize this.type}}</span>
+              </div>
+              
+              <div class="combatant-stats">
+                <div class="hp-bar">
+                  <div class="hp-fill" style="width: {{multiply (divide this.currentHp this.maxHp) 100}}%"></div>
+                  <span class="hp-text">{{this.currentHp}}/{{this.maxHp}}</span>
+                </div>
+                <span class="ac-text">AC {{this.ac}}</span>
+                <span class="initiative-text">Init {{this.initiative}}</span>
+              </div>
+              
+              {{#if this.statusEffects.length}}
+                <div class="status-effects">
+                  {{#each this.statusEffects}}
+                    <span class="status-badge" title="Duration: {{duration}} rounds">
+                      {{name}}
+                      <button type="button" class="remove-status-btn" 
+                              data-combatant-id="{{../id}}" 
+                              data-status-index="{{@index}}">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </span>
+                  {{/each}}
+                </div>
+              {{/if}}
+            </div>
+            
+            <!-- Combatant Actions -->
+            <div class="combatant-actions">
+              <button type="button" class="action-btn damage-btn" 
+                      data-combatant-id="{{this.id}}" 
+                      title="Apply Damage">
+                <i class="fas fa-heart-broken"></i>
+              </button>
+              <button type="button" class="action-btn heal-btn" 
+                      data-combatant-id="{{this.id}}" 
+                      title="Apply Healing">
+                <i class="fas fa-heart"></i>
+              </button>
+              <button type="button" class="action-btn add-status-btn" 
+                      data-combatant-id="{{this.id}}" 
+                      title="Add Status Effect">
+                <i class="fas fa-plus-circle"></i>
+              </button>
+              <button type="button" class="action-btn edit-initiative-btn" 
+                      data-combatant-id="{{this.id}}" 
+                      title="Edit Initiative">
+                <i class="fas fa-dice-d20"></i>
+              </button>
+              <button type="button" class="action-btn remove-combatant-btn" 
+                      data-combatant-id="{{this.id}}" 
+                      title="Remove from Combat">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <div class="no-combatants">
+        <p>No combatants added to combat.</p>
+        <p>Click "Add Combatant" to begin setting up your encounter.</p>
+      </div>
+    {{/if}}
+  </div>
+
+  <!-- Combat Tips -->
+  <div class="combat-tips">
+    <h4>Combat Tips:</h4>
+    <ul>
+      <li>Add all participants before starting combat</li>
+      <li>Initiative is automatically rolled when combat starts</li>
+      <li>Use the damage/heal buttons to track HP</li>
+      <li>Status effects automatically expire after their duration</li>
+      <li>You can edit initiative at any time during combat</li>
+    </ul>
+  </div>
+</div>
