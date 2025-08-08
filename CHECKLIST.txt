@@ -1,0 +1,11 @@
+[ ] Files copied into Data\systems\custom-ttrpg
+[ ] system.json exists at Data\systems\custom-ttrpg\system.json
+[ ] Foundry started, world loaded
+[ ] System visible under Manage Systems
+[ ] Test character created
+[ ] Character sheet opens without errors
+[ ] Open menus: Spells, Inventory, Feats
+[ ] Open Equipment Manager
+[ ] Open Abilities Manager
+[ ] Open Combat Tracker
+[ ] No red errors in DevTools Console (F12)

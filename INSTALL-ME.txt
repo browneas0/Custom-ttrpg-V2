@@ -1,0 +1,18 @@
+Custom TTRPG System - Install Guide
+
+Option A: Quick Installer (Recommended)
+1) Double-click INSTALL-NOW.bat
+2) If prompted, paste your Foundry Data path (usually C:\Users\<You>\AppData\Local\FoundryVTT\Data)
+3) Start Foundry VTT -> Manage Systems -> select "Custom TTRPG System"
+
+Option B: Manual Install
+1) Find your Foundry Data directory (Windows default):
+   C:\Users\<You>\AppData\Local\FoundryVTT\Data
+2) Create folder: Data\systems\custom-ttrpg
+3) Copy this repository's contents into Data\systems\custom-ttrpg
+4) Start Foundry VTT -> Manage Systems -> select "Custom TTRPG System"
+
+Troubleshooting
+- If the system does not appear, press F12 in the browser and check the Console for errors
+- Ensure the folder structure contains system.json at: Data\systems\custom-ttrpg\system.json
+- Do not place large asset packs into Git; keep them locally (e.g., Desktop\mailbox)
