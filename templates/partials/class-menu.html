@@ -1,0 +1,17 @@
+<section>
+  <h2>Classes</h2>
+  <ul>
+    {{#each classes}}
+      <li data-drag-type="Class" data-class="{{this.name}}">
+        <img class="ctt-icon" src="systems/custom-ttrpg/Icons/ctt/{{this.name}}.svg"
+             alt="{{this.name}} icon" onerror="this.remove()" />
+        <h3>{{this.name}}</h3>
+        <p><em>{{this.core}}</em></p>
+        <p>{{this.description}}</p>
+        <!-- stats and buttons -->
+        <button class="ctt-btn-create" data-class="{{this.name}}">Create Actor</button>
+        <button class="ctt-btn-info" data-class="{{this.name}}">Info</button>
+      </li>
+    {{/each}}
+  </ul>
+</section>

@@ -1,0 +1,136 @@
+<form class="custom-sheet" autocomplete="off">
+  <!-- Header Section -->
+  <header class="sheet-header">
+    <div class="header-fields">
+      <div class="charname">
+        <input name="name" type="text" value="{{actor.name}}" placeholder="Character Name"/>
+      </div>
+      <div class="class-info">
+        <label>Class:</label>
+        <span class="class-display">{{class}}</span>
+        <button type="button" id="ctt-btn-info" title="View Class Details">
+          <i class="fas fa-info-circle"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Tabs -->
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="stats">Stats</a>
+    <a class="item" data-tab="combat">Combat</a>
+    <a class="item" data-tab="notes">Notes</a>
+  </nav>
+
+  <!-- Stats Tab -->
+  <div class="tab" data-group="primary" data-tab="stats">
+    
+    <!-- Core Attributes -->
+    <div class="attributes-section">
+      <h3>Core Attributes</h3>
+      <div class="attributes-grid">
+        
+        <!-- Health Points -->
+        <div class="attribute-block health">
+          <label>Health Points</label>
+          <div class="attribute-value">
+            <input type="number" name="system.attributes.hp.value" value="{{attributes.hp.value}}" data-dtype="Number"/>
+            <span class="separator">/</span>
+            <span class="max-value">{{attributes.hp.max}}</span>
+          </div>
+        </div>
+
+        <!-- Strength -->
+        <div class="attribute-block">
+          <label>Strength (STR)</label>
+          <div class="attribute-value">
+            <input type="number" name="system.attributes.str.value" value="{{attributes.str.value}}" data-dtype="Number"/>
+            <span class="separator">/</span>
+            <span class="max-value">{{attributes.str.max}}</span>
+          </div>
+        </div>
+
+        <!-- Dexterity -->
+        <div class="attribute-block">
+          <label>Dexterity (DEX)</label>
+          <div class="attribute-value">
+            <input type="number" name="system.attributes.dex.value" value="{{attributes.dex.value}}" data-dtype="Number"/>
+            <span class="separator">/</span>
+            <span class="max-value">{{attributes.dex.max}}</span>
+          </div>
+        </div>
+
+        <!-- Endurance -->
+        <div class="attribute-block">
+          <label>Endurance (END)</label>
+          <div class="attribute-value">
+            <input type="number" name="system.attributes.end.value" value="{{attributes.end.value}}" data-dtype="Number"/>
+            <span class="separator">/</span>
+            <span class="max-value">{{attributes.end.max}}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Derived Stats -->
+    <div class="derived-section">
+      <h3>Derived Stats</h3>
+      <div class="derived-grid">
+        
+        <div class="derived-stat">
+          <label>Critical Hit Threshold</label>
+          <span class="value">{{attributes.crit}}</span>
+        </div>
+        
+        <div class="derived-stat">
+          <label>HP Multiplier</label>
+          <span class="value">×{{settings}}</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Combat Tab -->
+  <div class="tab" data-group="primary" data-tab="combat">
+    <div class="combat-section">
+      <h3>Combat Statistics</h3>
+      
+      <div class="combat-grid">
+        <div class="combat-stat">
+          <label>Attack Bonus</label>
+          <input type="number" name="system.combat.attackBonus" value="{{combat.attackBonus}}" data-dtype="Number"/>
+        </div>
+        
+        <div class="combat-stat">
+          <label>Defense Rating</label>
+          <input type="number" name="system.combat.defense" value="{{combat.defense}}" data-dtype="Number"/>
+        </div>
+        
+        <div class="combat-stat">
+          <label>Damage Bonus</label>
+          <input type="number" name="system.combat.damageBonus" value="{{combat.damageBonus}}" data-dtype="Number"/>
+        </div>
+      </div>
+
+      <div class="abilities-section">
+        <h3>Class Abilities</h3>
+        <div class="abilities-list">
+          <!-- We'll populate this with class-specific abilities later -->
+          <p><em>Class abilities will be displayed here</em></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes Tab -->
+  <div class="tab" data-group="primary" data-tab="notes">
+    <div class="notes-section">
+      <h3>Character Notes</h3>
+      <textarea name="system.notes" placeholder="Character background, notes, etc...">{{notes}}</textarea>
+    </div>
+  </div>
+
+</form>

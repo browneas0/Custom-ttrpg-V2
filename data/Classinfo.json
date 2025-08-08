@@ -1,0 +1,32 @@
+{
+  "Monk": {
+    "description": "Masters of martial arts and chi.",
+    "coreMechanic": "Unarmed Strike Boons",
+    "baseStats": {
+      "Health": 10,
+      "STR": 8,
+      "DEX": 12,
+      "END": 10,
+      "CritRoll": 20
+    },
+    "spells": [
+      "Test Spell (Monk)",
+      "Basic Strike"
+    ]
+  },
+  "Warlock": {
+    "description": "Power through dark pacts.",
+    "coreMechanic": "Dark Rituals & Pacts",
+    "baseStats": {
+      "Health": 8,
+      "STR": 6,
+      "DEX": 10,
+      "END": 12,
+      "CritRoll": 22
+    },
+    "spells": [
+      "Test Spell (Warlock)",
+      "Dark Bolt"
+    ]
+  }
+}

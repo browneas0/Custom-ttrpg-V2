@@ -1,0 +1,27 @@
+{
+  "id": "custom-ttrpg",
+  "title": "Custom TTRPG System",
+  "version": "0.0.6-v5",
+  "description": "Modular TTRPG system - dynamic menus and hotkeys",
+  "authors": [{"name":"Your Name","url":""}],
+  "compatibility": {"minimum":10,"verified":"11"},
+  "grid": {"distance":5,"units":"ft"},
+  "esmodules": [
+    "module/init.js",
+    "module/class-loader.js",
+    "module/macros.js",
+    "module/sheets/character-sheet.js"
+  ],
+  "styles": ["styles/custom-ttrpg.css"],
+  "templates": [
+    "templates/actors/character-sheet.html",
+    "templates/partials/attribute-row.html",
+    "templates/partials/class-menu.html",
+    "templates/partials/spells-menu.html",
+    "templates/partials/inventory-menu.html"
+  ],
+  "documentTypes": {
+    "Actor": {"character": {},"npc": {}},
+    "Item": {"combatArt": {},"spell": {},"equipment": {}}
+  }
+}

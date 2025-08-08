@@ -1,0 +1,12 @@
+{
+  "name": "custom-ttrpg",
+  "version": "1.0.0",
+  "description": "1. Place folder in `FoundryVTT/Data/systems/custom-ttrpg/` 2. Enable **Custom TTRPG System** 3. Use **New Character** button in Actor Directory",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
