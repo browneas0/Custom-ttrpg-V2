@@ -1,0 +1,42 @@
+# Large binaries and design/source assets
+*.zip
+*.7z
+*.rar
+*.iso
+*.psd
+*.PSD
+*.ai
+*.svgz
+*.xcf
+*.tif
+*.tiff
+*.dds
+*.webp
+*.kra
+
+# Icon packs and nested duplicates
+Icons/**
+Custom-ttrpg-V2-main/**
+
+# Build and logs
+node_modules/
+dist/
+build/
+.cache/
+.DS_Store
+Thumbs.db
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS/editor
+.vscode/
+.idea/
+*.swp
+
+# Foundry caches
+Data/
+foundrydata/
+
+# Local helpers
+mailbox/**
