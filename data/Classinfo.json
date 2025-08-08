@@ -1,32 +1,540 @@
 {
   "Monk": {
-    "description": "Masters of martial arts and chi.",
-    "coreMechanic": "Unarmed Strike Boons",
+    "description": "A master of martial arts that benefits from keeping a level head and trusting themselves and their combat mastery to gain victory in combat.",
+    "coreMechanic": "Boon System (Bushido/Chi/Zen) → Harmony → Enlightenment",
+    "playstyle": "Consistent jack-of-all-trades dealing constant unarmed strikes. A cross-country runner where each action has meaning, pushing combat forward through utility and flow control.",
     "baseStats": {
-      "Health": 10,
-      "STR": 8,
-      "DEX": 12,
+      "Health": 20,
+      "STR": 10,
+      "DEX": 10,
       "END": 10,
-      "CritRoll": 20
+      "WIS": 10,
+      "INT": 10,
+      "CHA": 10,
+      "CritRoll": 25,
+      "DamageDice": "1d6",
+      "UtilityDice": "1d6"
+    },
+    "attributeEffects": {
+      "STR": "Damage Amplification",
+      "DEX": "Crit Chance", 
+      "END": "Health Increase, Damage Reduction",
+      "WIS": "Utility Amplification"
+    },
+    "levelProgression": {
+      "1": { "hp": 20, "features": [] },
+      "2": { "hp": 25, "features": ["+1 Ability Point"] },
+      "3": { "hp": 30, "features": ["+1 Free Action", "Unarmed Master"] },
+      "4": { "hp": 35, "features": ["+1 Ability Point"] },
+      "5": { "hp": 40, "features": [] },
+      "6": { "hp": 45, "features": ["+2 Ability Points"] },
+      "7": { "hp": 50, "features": [] },
+      "8": { "hp": 55, "features": ["+1 Ability Point", "Combo Strikes"] },
+      "9": { "hp": 60, "features": [] },
+      "10": { "hp": 65, "features": ["+2 Ability Points"] },
+      "11": { "hp": 70, "features": [] },
+      "12": { "hp": 75, "features": ["+2 Ability Points", "+1 Free Action", "Deft Hands"] },
+      "13": { "hp": 80, "features": [] },
+      "14": { "hp": 85, "features": ["+2 Ability Points"] },
+      "15": { "hp": 90, "features": [] },
+      "16": { "hp": 95, "features": ["+2 Ability Points", "+1 Free Action", "Inner Peace", "Deft Hands"] },
+      "17": { "hp": 100, "features": ["+1 Ability Point"] },
+      "18": { "hp": 110, "features": ["+1 Ability Point", "+1 Free Action", "Self Understanding", "Deft Hands"] },
+      "19": { "hp": 120, "features": ["+2 Ability Points", "Deft Hands"] },
+      "20": { "hp": 150, "features": ["+5 Ability Points", "+1 Free Action", "Enlightenment", "Deft Hands"] }
+    },
+    "classFeatures": {
+      "Unarmed Master": {
+        "level": 3,
+        "description": "Unarmed strikes become a basic attack"
+      },
+      "Combo Strikes": {
+        "level": 8,
+        "description": "You can now unarmed strike twice as a basic attack"
+      },
+      "Deft Hands": {
+        "level": 12,
+        "description": "Reduce your critical hit threshold by 1 at levels 12, 16, 18, 19, and 20"
+      },
+      "Inner Peace": {
+        "level": 16,
+        "description": "If you gain ten stacks of harmony, enter Enlightened State until end of combat. Grants level 20 monk stat benefits. Heal to max when combat ends."
+      },
+      "Self Understanding": {
+        "level": 18,
+        "description": "Use two boons of the same type instead of harmony for empowered effects and abilities"
+      },
+      "Enlightenment": {
+        "level": 20,
+        "description": "Gain 3 skill points that can be moved to any attribute at any time"
+      }
+    },
+    "resources": {
+      "Bushido": {
+        "max": 3,
+        "description": "Build courage to amplify unarmed strikes",
+        "color": "red"
+      },
+      "Chi": {
+        "max": 3,
+        "description": "Channel energy to strengthen your body",
+        "color": "orange"
+      },
+      "Zen": {
+        "max": 3,
+        "description": "Channel energy into empowering others and your mind",
+        "color": "blue"
+      },
+      "Harmony": {
+        "max": 10,
+        "description": "Gained when you have one of each boon type. Used for casting and empowering abilities.",
+        "color": "purple"
+      }
+    },
+    "spells": {
+      "offense": [
+        {
+          "name": "Flame Palm",
+          "type": "Bushido Boon",
+          "cost": "1 Bushido",
+          "effect": "+1d6 fire on hit; 1d6 fire next turn",
+          "scaling": "+1d6 per 10 STR",
+          "tier": 1
+        },
+        {
+          "name": "Circle of Flow",
+          "type": "Passive",
+          "cost": "2 Harmony",
+          "effect": "Maintain flow state",
+          "scaling": "3 Harmony: +1 extra unarmed attack",
+          "tier": 3
+        }
+      ],
+      "healing": [
+        {
+          "name": "Open Breath",
+          "type": "Zen Boon",
+          "cost": "1 Zen",
+          "effect": "Heal 1d6 + (WIS ÷ 5)",
+          "scaling": "+1d6 at WIS 15 and 20",
+          "tier": 1
+        },
+        {
+          "name": "Restoring Pulse",
+          "type": "Harmony",
+          "cost": "2 Harmony",
+          "effect": "Heal allies in 10 ft radius",
+          "scaling": "2 Harmony: remove 1 condition",
+          "tier": 2
+        }
+      ],
+      "defense": [
+        {
+          "name": "Iron Veins",
+          "type": "Chi Boon",
+          "cost": "1 Chi",
+          "effect": "+2 Damage Reduction",
+          "scaling": "+1 DR per 5 END",
+          "tier": 1
+        },
+        {
+          "name": "Harmony Shell",
+          "type": "Harmony",
+          "cost": "1 Harmony",
+          "effect": "+2 AC to allies within 10 ft",
+          "scaling": "+1 AC per 10 WIS (max +4)",
+          "tier": 2
+        },
+        {
+          "name": "Tranquil Mind",
+          "type": "Passive",
+          "cost": "Maintain 1 Harmony",
+          "effect": "Immune to Charm and Fear",
+          "scaling": "2+ Harmony: allies gain resistance",
+          "tier": 1
+        }
+      ],
+      "utility": [
+        {
+          "name": "Stillstep",
+          "type": "Harmony",
+          "cost": "1 or 2 Harmony",
+          "effect": "Teleport 15 ft to visible space",
+          "scaling": "2 Harmony: immune to opportunity attacks",
+          "tier": 1
+        },
+        {
+          "name": "Weightless Presence",
+          "type": "Passive",
+          "cost": "Maintain 1 Harmony",
+          "effect": "+5 ft movement, +1 Dexterity checks",
+          "scaling": "Ends when Harmony = 0",
+          "tier": 1
+        },
+        {
+          "name": "Balance of Motion",
+          "type": "Passive",
+          "cost": "Maintain 1 Harmony",
+          "effect": "Max die roll = regain 1 Boon (1/round)",
+          "scaling": "None",
+          "tier": 3
+        }
+      ]
+    }
+  },
+
+  "Warlock": {
+    "description": "Something deep inside you eats everything that makes you strong. Only through forbidden Pacts and Rituals can you satiate your Dark Hunger.",
+    "coreMechanic": "Dark Hunger + Pacts + Rituals (No normal leveling)",
+    "playstyle": "In constant cycle for power, always growing but never as expected. Unlimited power through sacrifice, requiring adaptability and self-ambition.",
+    "baseStats": {
+      "Health": 15,
+      "STR": 5,
+      "DEX": 5,
+      "END": 5,
+      "WIS": 15,
+      "INT": 15,
+      "CHA": 15,
+      "CritRoll": 20,
+      "DamageDice": "1d4",
+      "UtilityDice": "1d4"
+    },
+    "attributeEffects": {
+      "END": "Health Increase",
+      "WIS": "Damage Amplification / Amplification", 
+      "INT": "Damage Amplification / Utility Amplification"
+    },
+    "levelProgression": {
+      "1": { "hp": 15, "features": [] },
+      "2": { "hp": 15, "features": [] },
+      "3": { "hp": 15, "features": ["+1 Class Feature", "Dark Pact"] },
+      "4": { "hp": 15, "features": [] },
+      "5": { "hp": 15, "features": [] },
+      "6": { "hp": 15, "features": [] },
+      "7": { "hp": 15, "features": [] },
+      "8": { "hp": 15, "features": [] },
+      "9": { "hp": 15, "features": [] },
+      "10": { "hp": 15, "features": [] },
+      "11": { "hp": 15, "features": [] },
+      "12": { "hp": 15, "features": ["+1 Class Feature", "Dark Rituals"] },
+      "13": { "hp": 15, "features": [] },
+      "14": { "hp": 15, "features": [] },
+      "15": { "hp": 15, "features": [] },
+      "16": { "hp": 15, "features": [] },
+      "17": { "hp": 15, "features": [] },
+      "18": { "hp": 15, "features": [] },
+      "19": { "hp": 15, "features": [] },
+      "20": { "hp": 15, "features": ["+1 Class Feature", "Ritualist"] }
+    },
+    "classFeatures": {
+      "Dark Hunger": {
+        "level": 1,
+        "description": "Cannot gain stats by leveling up. No class benefits from being a warlock - the dark hunger consumes all worldly experience. Power only comes through borrowing."
+      },
+      "Dark Pact": {
+        "level": 3,
+        "description": "Make a deal with a Dark Lord for three quests of varying difficulty. Completion grants: Ability Points, Spells, Ability Improvements, Permanent Health, Personal Loot and Magical Items."
+      },
+      "Dark Rituals": {
+        "level": 12,
+        "description": "Access to ritual bounties for permanent buffs. Only Three rituals can be performed at once. Rituals cannot be discarded and must be completed."
+      },
+      "Ritualist": {
+        "level": 20,
+        "description": "Gain 4th Ritual 'Hello?' (1000 souls slain by your hand). Reward: Satiate hunger forever, 5 rituals at once, stop/start rituals once per long rest."
+      }
+    },
+    "resources": {
+      "Dark Hunger": {
+        "max": 1,
+        "description": "Prevents normal stat progression from leveling",
+        "color": "black"
+      },
+      "Pact Progress": {
+        "max": 3,
+        "description": "Track completion of current Dark Pact quests",
+        "color": "red"
+      },
+      "Active Rituals": {
+        "max": 3,
+        "description": "Number of rituals that can be performed simultaneously",
+        "color": "purple"
+      }
     },
     "spells": [
-      "Test Spell (Monk)",
-      "Basic Strike"
+      "Eldritch Blast",
+      "Dark Ritual", 
+      "Hex Curse",
+      "Shadow Step",
+      "Pact Weapon",
+      "Soul Drain",
+      "Void Touch",
+      "Infernal Contract"
     ]
   },
-  "Warlock": {
-    "description": "Power through dark pacts.",
-    "coreMechanic": "Dark Rituals & Pacts",
+
+  "Wizard": {
+    "description": "An arsenal of spells that can be augmented by Amplify, Split, or Hasten effects. Power flows naturally through magical veins.",
+    "coreMechanic": "Spell Augmentation (Amplify/Split/Hasten) + Spell Slots",
+    "playstyle": "Power comes from knowing how to adapt spells to benefit any situation. Constant growth through magical connection rather than worldly journey.",
     "baseStats": {
-      "Health": 8,
-      "STR": 6,
-      "DEX": 10,
-      "END": 12,
-      "CritRoll": 22
+      "Health": 15,
+      "STR": 5,
+      "DEX": 5, 
+      "END": 5,
+      "WIS": 15,
+      "INT": 15,
+      "CHA": 5,
+      "CritRoll": 30,
+      "DamageDice": "1d6",
+      "UtilityDice": "1d4"
+    },
+    "attributeEffects": {
+      "END": "Health Increase",
+      "WIS": "Spell Slots",
+      "INT": "Damage Amplification / Utility Amplification"
+    },
+    "levelProgression": {
+      "1": { "hp": 15, "features": ["+3 Spell Slots"] },
+      "2": { "hp": 15, "features": [] },
+      "3": { "hp": 20, "features": ["+1 Class Feature", "+1 Spell Slot", "Magus Blood Right"] },
+      "4": { "hp": 20, "features": [] },
+      "5": { "hp": 25, "features": [] },
+      "6": { "hp": 25, "features": [] },
+      "7": { "hp": 30, "features": ["+1 Class Feature", "+1 Spell Slot", "ArchMage Blessing"] },
+      "8": { "hp": 30, "features": [] },
+      "9": { "hp": 35, "features": [] },
+      "10": { "hp": 40, "features": ["+1 Spell Slot"] },
+      "11": { "hp": 45, "features": [] },
+      "12": { "hp": 50, "features": ["+2 Class Features", "+2 Spell Slots", "Master Magus"] },
+      "13": { "hp": 55, "features": [] },
+      "14": { "hp": 60, "features": [] },
+      "15": { "hp": 65, "features": ["+1 Class Feature", "Mana Restoration Runes"] },
+      "16": { "hp": 70, "features": [] },
+      "17": { "hp": 75, "features": ["+1 Spell Slot"] },
+      "18": { "hp": 80, "features": [] },
+      "19": { "hp": 90, "features": ["+1 Spell Slot"] },
+      "20": { "hp": 100, "features": ["+2 Spell Slots", "Further Improvement"] }
+    },
+    "classFeatures": {
+      "Magus Blood Right": {
+        "level": 3,
+        "description": "Augment spells with Amplify (hold for extra damage), Split (half damage, extra target), or Hasten (cast 3 spells, lose next turns)"
+      },
+      "ArchMage Blessing": {
+        "level": 7,
+        "description": "If no spell slots remain, cast basic attack twice"
+      },
+      "Master Magus": {
+        "level": 12,
+        "description": "Replace basic attack with any level 1-5 spell. Can swap once per long rest. Can select any basic wizard attack."
+      },
+      "Mana Restoration Runes": {
+        "level": 15,
+        "description": "Refresh 1 spell slot every 5 turns"
+      },
+      "Further Improvement": {
+        "level": 20,
+        "description": "Enhanced augmentations: Amplify (no fizzle on broken concentration), Split (additive targeting), Hasten (3 basic attacks, 1 turn cost)"
+      }
+    },
+    "resources": {
+      "Spell Slots": {
+        "max": 20,
+        "description": "Used to cast spells. Restored on long rest.",
+        "color": "blue"
+      },
+      "Augmentation": {
+        "max": 1,
+        "description": "Current spell augmentation mode (Amplify/Split/Hasten)",
+        "color": "purple"
+      }
     },
     "spells": [
-      "Test Spell (Warlock)",
-      "Dark Bolt"
+      "Magic Missile",
+      "Fireball", 
+      "Lightning Bolt",
+      "Shield",
+      "Teleport",
+      "Counterspell",
+      "Dispel Magic",
+      "Polymorph"
     ]
+  },
+
+  "Fighter": {
+    "description": "A master of martial combat who excels in weapon mastery and tactical warfare. Through discipline and training, you become an unstoppable force on the battlefield.",
+    "coreMechanic": "Weapon Mastery + Tactical Stances + Combat Superiority",
+    "playstyle": "Versatile martial specialist who adapts to any combat situation. Master of weapons and armor, with tactical abilities that control the battlefield.",
+    "baseStats": {
+      "Health": 25,
+      "STR": 12,
+      "DEX": 10,
+      "END": 12,
+      "WIS": 8,
+      "INT": 8,
+      "CHA": 8,
+      "CritRoll": 18,
+      "DamageDice": "1d8",
+      "UtilityDice": "1d6"
+    },
+    "attributeEffects": {
+      "STR": "Damage Amplification, Weapon Mastery",
+      "DEX": "Defense Rating, Initiative",
+      "END": "Health Increase, Stamina"
+    },
+    "levelProgression": {
+      "1": { "hp": 25, "features": ["+1 Weapon Proficiency", "Combat Stance"] },
+      "2": { "hp": 30, "features": ["+1 Ability Point"] },
+      "3": { "hp": 35, "features": ["+1 Class Feature", "Weapon Master"] },
+      "4": { "hp": 40, "features": ["+1 Ability Point"] },
+      "5": { "hp": 45, "features": ["Extra Attack"] },
+      "6": { "hp": 50, "features": ["+2 Ability Points"] },
+      "7": { "hp": 55, "features": ["+1 Class Feature", "Tactical Awareness"] },
+      "8": { "hp": 60, "features": ["+1 Ability Point"] },
+      "9": { "hp": 65, "features": ["Improved Critical"] },
+      "10": { "hp": 70, "features": ["+2 Ability Points"] },
+      "11": { "hp": 75, "features": ["+1 Class Feature", "Combat Superiority"] },
+      "12": { "hp": 80, "features": ["+2 Ability Points"] },
+      "13": { "hp": 85, "features": ["Indomitable"] },
+      "14": { "hp": 90, "features": ["+2 Ability Points"] },
+      "15": { "hp": 95, "features": ["+1 Class Feature", "Weapon Legend"] },
+      "16": { "hp": 100, "features": ["+2 Ability Points"] },
+      "17": { "hp": 110, "features": ["Action Surge"] },
+      "18": { "hp": 120, "features": ["+2 Ability Points"] },
+      "19": { "hp": 130, "features": ["+1 Class Feature", "Battle Master"] },
+      "20": { "hp": 150, "features": ["+5 Ability Points", "Legendary Warrior"] }
+    },
+    "classFeatures": {
+      "Weapon Master": {
+        "level": 3,
+        "description": "Choose a weapon type. You gain +2 to attack and damage rolls with that weapon type."
+      },
+      "Extra Attack": {
+        "level": 5,
+        "description": "You can attack twice when you take the Attack action."
+      },
+      "Tactical Awareness": {
+        "level": 7,
+        "description": "You can use your reaction to grant advantage to an ally's attack or impose disadvantage on an enemy's attack."
+      },
+      "Improved Critical": {
+        "level": 9,
+        "description": "Your weapon attacks score a critical hit on a roll of 19 or 20."
+      },
+      "Combat Superiority": {
+        "level": 11,
+        "description": "You gain superiority dice that can be used for tactical maneuvers."
+      },
+      "Indomitable": {
+        "level": 13,
+        "description": "You can reroll a failed saving throw once per long rest."
+      },
+      "Weapon Legend": {
+        "level": 15,
+        "description": "Your chosen weapon type gains additional properties and damage."
+      },
+      "Action Surge": {
+        "level": 17,
+        "description": "You can take one additional action on your turn once per short rest."
+      },
+      "Battle Master": {
+        "level": 19,
+        "description": "You gain access to advanced tactical maneuvers and battlefield control abilities."
+      },
+      "Legendary Warrior": {
+        "level": 20,
+        "description": "You become a master of all weapons and gain legendary combat abilities."
+      }
+    },
+    "resources": {
+      "Stamina": {
+        "max": 10,
+        "description": "Used for tactical maneuvers and special abilities",
+        "color": "green"
+      },
+      "Superiority Dice": {
+        "max": 6,
+        "description": "Used for tactical maneuvers and combat superiority",
+        "color": "blue"
+      },
+      "Action Surge": {
+        "max": 1,
+        "description": "Extra action once per short rest",
+        "color": "red"
+      }
+    },
+    "spells": {
+      "combat": [
+        {
+          "name": "Power Strike",
+          "type": "Stamina",
+          "cost": "2 Stamina",
+          "effect": "+1d8 damage on next weapon attack",
+          "scaling": "+1d8 per 5 STR",
+          "tier": 1
+        },
+        {
+          "name": "Defensive Stance",
+          "type": "Stamina",
+          "cost": "1 Stamina",
+          "effect": "+2 AC until end of turn",
+          "scaling": "+1 AC per 5 DEX",
+          "tier": 1
+        },
+        {
+          "name": "Tactical Strike",
+          "type": "Superiority",
+          "cost": "1 Superiority Die",
+          "effect": "Impose disadvantage on target's next attack",
+          "scaling": "Target 2 enemies at level 15",
+          "tier": 2
+        }
+      ],
+      "tactical": [
+        {
+          "name": "Battle Command",
+          "type": "Superiority",
+          "cost": "2 Superiority Dice",
+          "effect": "Grant ally extra attack",
+          "scaling": "Affect 2 allies at level 17",
+          "tier": 3
+        },
+        {
+          "name": "Weapon Mastery",
+          "type": "Passive",
+          "cost": "Maintain 1 Stamina",
+          "effect": "+1 to attack and damage with chosen weapon",
+          "scaling": "+1 per 5 levels",
+          "tier": 1
+        },
+        {
+          "name": "Combat Reflexes",
+          "type": "Reaction",
+          "cost": "1 Stamina",
+          "effect": "Make opportunity attack when missed",
+          "scaling": "None",
+          "tier": 2
+        }
+      ],
+      "legendary": [
+        {
+          "name": "Legendary Strike",
+          "type": "Action Surge",
+          "cost": "1 Action Surge",
+          "effect": "Make 4 weapon attacks with advantage",
+          "scaling": "None",
+          "tier": 5
+        },
+        {
+          "name": "Battlefield Control",
+          "type": "Superiority",
+          "cost": "3 Superiority Dice",
+          "effect": "Force all enemies in 30ft to make STR save or be pushed",
+          "scaling": "None",
+          "tier": 4
+        }
+      ]
+    }
   }
 }

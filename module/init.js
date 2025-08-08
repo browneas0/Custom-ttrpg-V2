@@ -10,10 +10,12 @@ import {
 } from "./macros.js";
 import { CharacterSheet } from "./sheets/character-sheet.js";
 import { ResetSettingsApp } from "./applications/reset-settings.js";
+import { SpellManager } from "./applications/spell-manager.js";
+import { InventoryManager } from "./applications/inventory-manager.js";
 import { CustomActor } from "../Actor/Actor.js";
 
 Hooks.once("init", async () => {
-  console.log("CustomTTRPG | init - foundation patch");
+  console.log("CustomTTRPG | init - V2 Professional Edition");
 
   game.settings.register("custom-ttrpg","hpMultiplier", {
     name: "HP Multiplier", hint: "END × multiplier added to base Health",
@@ -52,7 +54,7 @@ Hooks.once("init", async () => {
 });
 
 Hooks.once("ready", async () => {
-  console.log("CustomTTRPG | ready - foundation patch");
+  console.log("CustomTTRPG | ready - V2 Professional Edition");
   await registerMacros();
 
   // Actor Directory header buttons - Fixed with proper null checks

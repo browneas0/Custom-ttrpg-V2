@@ -1,8 +1,8 @@
 {
   "id": "custom-ttrpg",
   "title": "Custom TTRPG System",
-  "version": "0.0.6-v5",
-  "description": "Modular TTRPG system - dynamic menus and hotkeys",
+  "version": "1.0.0",
+  "description": "Professional modular TTRPG system with editable character sheets, class progression, dynamic menus, spell casting, and inventory management",
   "authors": [{"name":"Your Name","url":""}],
   "compatibility": {"minimum":10,"verified":"11"},
   "grid": {"distance":5,"units":"ft"},
@@ -18,7 +18,11 @@
     "templates/partials/attribute-row.html",
     "templates/partials/class-menu.html",
     "templates/partials/spells-menu.html",
-    "templates/partials/inventory-menu.html"
+    "templates/partials/inventory-menu.html",
+    "templates/partials/class-info-window.html",
+    "templates/partials/reset-settings.html",
+    "templates/applications/spell-manager.html",
+    "templates/applications/inventory-manager.html"
   ],
   "documentTypes": {
     "Actor": {"character": {},"npc": {}},

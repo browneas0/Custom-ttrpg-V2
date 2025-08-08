@@ -1,0 +1,242 @@
+<div class="inventory-manager">
+  <!-- Header -->
+  <div class="inventory-header">
+    <h2>Inventory - {{actor.name}}</h2>
+    <div class="character-info">
+      <span class="class-badge">{{class}} Level {{level}}</span>
+    </div>
+  </div>
+
+  <!-- Currency and Weight -->
+  <div class="inventory-stats">
+    <div class="currency-section">
+      <h3>Currency</h3>
+      <div class="currency-grid">
+        <div class="currency-item">
+          <label>Gold:</label>
+          <input type="number" class="currency-input" data-currency="gold" value="{{currency.gold}}" min="0">
+        </div>
+        <div class="currency-item">
+          <label>Silver:</label>
+          <input type="number" class="currency-input" data-currency="silver" value="{{currency.silver}}" min="0">
+        </div>
+        <div class="currency-item">
+          <label>Copper:</label>
+          <input type="number" class="currency-input" data-currency="copper" value="{{currency.copper}}" min="0">
+        </div>
+      </div>
+    </div>
+    
+    <div class="weight-section">
+      <h3>Carrying Capacity</h3>
+      <div class="weight-display">
+        <div class="weight-bar">
+          <div class="weight-fill" style="width: {{multiply (divide currentWeight carryingCapacity) 100}}%"></div>
+        </div>
+        <div class="weight-text">{{currentWeight}} / {{carryingCapacity}} lbs</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="inventory-content">
+    <!-- Item Categories -->
+    <div class="item-categories">
+      <h3>Inventory Items</h3>
+      
+      <!-- Weapons -->
+      <div class="category-section">
+        <h4><i class="fas fa-sword"></i> Weapons</h4>
+        <div class="items-list">
+          {{#if inventory.weapons.length}}
+            {{#each inventory.weapons}}
+              <div class="item-entry {{#if this.equipped}}equipped{{/if}}" 
+                   data-item-id="{{this.id}}" 
+                   data-category="weapons">
+                <div class="item-info">
+                  <span class="item-name">{{this.name}}</span>
+                  <span class="item-quantity">x{{this.quantity}}</span>
+                  {{#if this.equipped}}<span class="equipped-badge">Equipped</span>{{/if}}
+                </div>
+                <div class="item-stats">
+                  <span class="item-weight">{{this.weight}} lbs</span>
+                  <span class="item-value">{{this.value}} gp</span>
+                </div>
+              </div>
+            {{/each}}
+          {{else}}
+            <div class="no-items">No weapons</div>
+          {{/if}}
+        </div>
+      </div>
+
+      <!-- Armor -->
+      <div class="category-section">
+        <h4><i class="fas fa-shield-alt"></i> Armor</h4>
+        <div class="items-list">
+          {{#if inventory.armor.length}}
+            {{#each inventory.armor}}
+              <div class="item-entry {{#if this.equipped}}equipped{{/if}}" 
+                   data-item-id="{{this.id}}" 
+                   data-category="armor">
+                <div class="item-info">
+                  <span class="item-name">{{this.name}}</span>
+                  <span class="item-quantity">x{{this.quantity}}</span>
+                  {{#if this.equipped}}<span class="equipped-badge">Equipped</span>{{/if}}
+                </div>
+                <div class="item-stats">
+                  <span class="item-weight">{{this.weight}} lbs</span>
+                  <span class="item-value">{{this.value}} gp</span>
+                </div>
+              </div>
+            {{/each}}
+          {{else}}
+            <div class="no-items">No armor</div>
+          {{/if}}
+        </div>
+      </div>
+
+      <!-- Equipment -->
+      <div class="category-section">
+        <h4><i class="fas fa-toolbox"></i> Equipment</h4>
+        <div class="items-list">
+          {{#if inventory.equipment.length}}
+            {{#each inventory.equipment}}
+              <div class="item-entry {{#if this.equipped}}equipped{{/if}}" 
+                   data-item-id="{{this.id}}" 
+                   data-category="equipment">
+                <div class="item-info">
+                  <span class="item-name">{{this.name}}</span>
+                  <span class="item-quantity">x{{this.quantity}}</span>
+                  {{#if this.equipped}}<span class="equipped-badge">Equipped</span>{{/if}}
+                </div>
+                <div class="item-stats">
+                  <span class="item-weight">{{this.weight}} lbs</span>
+                  <span class="item-value">{{this.value}} gp</span>
+                </div>
+              </div>
+            {{/each}}
+          {{else}}
+            <div class="no-items">No equipment</div>
+          {{/if}}
+        </div>
+      </div>
+
+      <!-- Consumables -->
+      <div class="category-section">
+        <h4><i class="fas fa-flask"></i> Consumables</h4>
+        <div class="items-list">
+          {{#if inventory.consumables.length}}
+            {{#each inventory.consumables}}
+              <div class="item-entry" 
+                   data-item-id="{{this.id}}" 
+                   data-category="consumables">
+                <div class="item-info">
+                  <span class="item-name">{{this.name}}</span>
+                  <span class="item-quantity">x{{this.quantity}}</span>
+                </div>
+                <div class="item-stats">
+                  <span class="item-weight">{{this.weight}} lbs</span>
+                  <span class="item-value">{{this.value}} gp</span>
+                </div>
+              </div>
+            {{/each}}
+          {{else}}
+            <div class="no-items">No consumables</div>
+          {{/if}}
+        </div>
+      </div>
+
+      <!-- Valuables -->
+      <div class="category-section">
+        <h4><i class="fas fa-gem"></i> Valuables</h4>
+        <div class="items-list">
+          {{#if inventory.valuables.length}}
+            {{#each inventory.valuables}}
+              <div class="item-entry" 
+                   data-item-id="{{this.id}}" 
+                   data-category="valuables">
+                <div class="item-info">
+                  <span class="item-name">{{this.name}}</span>
+                  <span class="item-quantity">x{{this.quantity}}</span>
+                </div>
+                <div class="item-stats">
+                  <span class="item-weight">{{this.weight}} lbs</span>
+                  <span class="item-value">{{this.value}} gp</span>
+                </div>
+              </div>
+            {{/each}}
+          {{else}}
+            <div class="no-items">No valuables</div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+
+    <!-- Item Details Panel -->
+    <div class="item-details-panel">
+      <h3>Item Details</h3>
+      
+      {{#if selectedItem}}
+        <div class="selected-item">
+          <div class="item-details">
+            <h4>{{selectedItem.name}}</h4>
+            <p><strong>Category:</strong> {{selectedItem.category}}</p>
+            <p><strong>Quantity:</strong> {{selectedItem.quantity}}</p>
+            <p><strong>Weight:</strong> {{selectedItem.weight}} lbs</p>
+            <p><strong>Value:</strong> {{selectedItem.value}} gold pieces</p>
+            {{#if selectedItem.description}}
+              <p><strong>Description:</strong></p>
+              <div class="item-description">{{selectedItem.description}}</div>
+            {{/if}}
+          </div>
+          
+          <div class="item-controls">
+            {{#if (or (eq selectedItem.category "weapons") (eq selectedItem.category "armor") (eq selectedItem.category "equipment"))}}
+              {{#if selectedItem.equipped}}
+                <button type="button" class="unequip-btn ctt-btn">
+                  <i class="fas fa-times"></i> Unequip
+                </button>
+              {{else}}
+                <button type="button" class="equip-btn ctt-btn">
+                  <i class="fas fa-check"></i> Equip
+                </button>
+              {{/if}}
+            {{/if}}
+            <button type="button" id="remove-item-btn" class="ctt-btn remove-item">
+              <i class="fas fa-trash"></i> Remove
+            </button>
+          </div>
+        </div>
+      {{else}}
+        <div class="no-item-selected">
+          <p>Select an item to view details.</p>
+          <div class="inventory-tips">
+            <h5>Inventory Tips:</h5>
+            <ul>
+              <li>Click on any item to view its details</li>
+              <li>Weapons, armor, and equipment can be equipped</li>
+              <li>Consumables are used up when consumed</li>
+              <li>Valuables can be sold for currency</li>
+              <li>Weight affects your carrying capacity</li>
+            </ul>
+          </div>
+        </div>
+      {{/if}}
+
+      <!-- Add Item Button -->
+      <div class="add-item-section">
+        <button type="button" id="add-item-btn" class="ctt-btn add-item">
+          <i class="fas fa-plus"></i> Add Item
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="inventory-footer">
+    <div class="inventory-info">
+      <p><i class="fas fa-info-circle"></i> Inventory system is in development. More features coming soon!</p>
+    </div>
+  </div>
+</div>

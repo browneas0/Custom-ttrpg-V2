@@ -5,9 +5,19 @@
       <div class="charname">
         <input name="name" type="text" value="{{actor.name}}" placeholder="Character Name"/>
       </div>
-      <div class="class-info">
-        <label>Class:</label>
-        <span class="class-display">{{class}}</span>
+      <div class="class-level-info">
+        <div class="class-display">
+          <label>Class:</label>
+          <span class="class-name">{{class}}</span>
+        </div>
+        <div class="level-display">
+          <label>Level:</label>
+          <input name="system.level" type="number" value="{{level}}" min="1" max="20" data-dtype="Number"/>
+        </div>
+        <div class="xp-display">
+          <label>XP:</label>
+          <input name="system.experience" type="number" value="{{experience}}" min="0" data-dtype="Number"/>
+        </div>
         <button type="button" id="ctt-btn-info" title="View Class Details">
           <i class="fas fa-info-circle"></i>
         </button>
@@ -18,7 +28,9 @@
   <!-- Main Content Tabs -->
   <nav class="sheet-tabs tabs" data-group="primary">
     <a class="item" data-tab="stats">Stats</a>
-    <a class="item" data-tab="combat">Combat</a>
+    <a class="item" data-tab="resources">Resources</a>
+    <a class="item" data-tab="features">Features</a>
+    <a class="item" data-tab="spells">Spells</a>
     <a class="item" data-tab="notes">Notes</a>
   </nav>
 
@@ -48,6 +60,7 @@
             <span class="separator">/</span>
             <span class="max-value">{{attributes.str.max}}</span>
           </div>
+          <div class="attribute-effect">{{strEffect}}</div>
         </div>
 
         <!-- Dexterity -->
@@ -58,6 +71,7 @@
             <span class="separator">/</span>
             <span class="max-value">{{attributes.dex.max}}</span>
           </div>
+          <div class="attribute-effect">{{dexEffect}}</div>
         </div>
 
         <!-- Endurance -->
@@ -68,24 +82,78 @@
             <span class="separator">/</span>
             <span class="max-value">{{attributes.end.max}}</span>
           </div>
+          <div class="attribute-effect">{{endEffect}}</div>
+        </div>
+
+        <!-- Wisdom -->
+        <div class="attribute-block">
+          <label>Wisdom (WIS)</label>
+          <div class="attribute-value">
+            <input type="number" name="system.attributes.wis.value" value="{{attributes.wis.value}}" data-dtype="Number"/>
+            <span class="separator">/</span>
+            <span class="max-value">{{attributes.wis.max}}</span>
+          </div>
+          <div class="attribute-effect">{{wisEffect}}</div>
+        </div>
+
+        <!-- Intelligence -->
+        <div class="attribute-block">
+          <label>Intelligence (INT)</label>
+          <div class="attribute-value">
+            <input type="number" name="system.attributes.int.value" value="{{attributes.int.value}}" data-dtype="Number"/>
+            <span class="separator">/</span>
+            <span class="max-value">{{attributes.int.max}}</span>
+          </div>
+          <div class="attribute-effect">{{intEffect}}</div>
+        </div>
+
+        <!-- Charisma -->
+        <div class="attribute-block">
+          <label>Charisma (CHA)</label>
+          <div class="attribute-value">
+            <input type="number" name="system.attributes.cha.value" value="{{attributes.cha.value}}" data-dtype="Number"/>
+            <span class="separator">/</span>
+            <span class="max-value">{{attributes.cha.max}}</span>
+          </div>
+          <div class="attribute-effect">{{chaEffect}}</div>
         </div>
 
       </div>
     </div>
 
-    <!-- Derived Stats -->
-    <div class="derived-section">
-      <h3>Derived Stats</h3>
-      <div class="derived-grid">
+    <!-- Combat Stats -->
+    <div class="combat-section">
+      <h3>Combat Statistics</h3>
+      <div class="combat-grid">
         
-        <div class="derived-stat">
+        <div class="combat-stat">
           <label>Critical Hit Threshold</label>
           <span class="value">{{attributes.crit}}</span>
         </div>
         
-        <div class="derived-stat">
-          <label>HP Multiplier</label>
-          <span class="value">×{{settings}}</span>
+        <div class="combat-stat">
+          <label>Attack Bonus</label>
+          <span class="value">+{{combat.attackBonus}}</span>
+        </div>
+        
+        <div class="combat-stat">
+          <label>Defense Rating</label>
+          <span class="value">{{combat.defense}}</span>
+        </div>
+        
+        <div class="combat-stat">
+          <label>Damage Bonus</label>
+          <span class="value">+{{combat.damageBonus}}</span>
+        </div>
+
+        <div class="combat-stat">
+          <label>Damage Dice</label>
+          <span class="value">{{combat.damageDice}}</span>
+        </div>
+
+        <div class="combat-stat">
+          <label>Utility Dice</label>
+          <span class="value">{{combat.utilityDice}}</span>
         </div>
 
       </div>
@@ -93,35 +161,154 @@
 
   </div>
 
-  <!-- Combat Tab -->
-  <div class="tab" data-group="primary" data-tab="combat">
-    <div class="combat-section">
-      <h3>Combat Statistics</h3>
+  <!-- Resources Tab -->
+  <div class="tab" data-group="primary" data-tab="resources">
+    <div class="resources-section">
+      <h3>Class Resources</h3>
       
-      <div class="combat-grid">
-        <div class="combat-stat">
-          <label>Attack Bonus</label>
-          <input type="number" name="system.combat.attackBonus" value="{{combat.attackBonus}}" data-dtype="Number"/>
+      {{#if resources}}
+        <div class="resources-grid">
+          {{#each resources}}
+            <div class="resource-block" data-resource="{{@key}}">
+              <div class="resource-header">
+                <label>{{this.description}}</label>
+                <div class="resource-controls">
+                  <button type="button" class="resource-btn decrease" data-action="decrease" data-resource="{{@key}}">-</button>
+                  <span class="resource-value">{{this.value}}/{{this.max}}</span>
+                  <button type="button" class="resource-btn increase" data-action="increase" data-resource="{{@key}}">+</button>
+                </div>
+              </div>
+              <div class="resource-bar">
+                <div class="resource-fill" style="width: {{resourcePercent this.value this.max}}%; background-color: var(--ctt-{{this.color}})"></div>
+              </div>
+            </div>
+          {{/each}}
         </div>
-        
-        <div class="combat-stat">
-          <label>Defense Rating</label>
-          <input type="number" name="system.combat.defense" value="{{combat.defense}}" data-dtype="Number"/>
-        </div>
-        
-        <div class="combat-stat">
-          <label>Damage Bonus</label>
-          <input type="number" name="system.combat.damageBonus" value="{{combat.damageBonus}}" data-dtype="Number"/>
-        </div>
-      </div>
+      {{else}}
+        <p class="no-resources">No class resources available at this level.</p>
+      {{/if}}
 
-      <div class="abilities-section">
-        <h3>Class Abilities</h3>
-        <div class="abilities-list">
-          <!-- We'll populate this with class-specific abilities later -->
-          <p><em>Class abilities will be displayed here</em></p>
+      <!-- Special Class Mechanics -->
+      {{#if (eq class "Monk")}}
+        <div class="monk-mechanics">
+          <h4>Monk Mechanics</h4>
+          <div class="boon-harmony-info">
+            <p><strong>Boon Flow:</strong> When you have one of each boon type (Bushido, Chi, Zen), gain 1 Harmony.</p>
+            <p><strong>Enlightenment:</strong> At 10 Harmony stacks, enter Enlightened State until end of combat.</p>
+          </div>
         </div>
-      </div>
+      {{/if}}
+
+      {{#if (eq class "Warlock")}}
+        <div class="warlock-mechanics">
+          <h4>Warlock Mechanics</h4>
+          <div class="dark-hunger-info">
+            <p><strong>Dark Hunger:</strong> Cannot gain stats from leveling. Power only comes through Pacts and Rituals.</p>
+            {{#if (gte level 3)}}<p><strong>Dark Pacts:</strong> Complete contracts for ability points, spells, and magical items.</p>{{/if}}
+            {{#if (gte level 12)}}<p><strong>Dark Rituals:</strong> Perform up to 3 rituals simultaneously for permanent buffs.</p>{{/if}}
+          </div>
+        </div>
+      {{/if}}
+
+      {{#if (eq class "Wizard")}}
+        <div class="wizard-mechanics">
+          <h4>Wizard Mechanics</h4>
+          <div class="augmentation-info">
+            <p><strong>Spell Augmentation:</strong> Modify spells with Amplify, Split, or Hasten.</p>
+            {{#if (gte level 12)}}<p><strong>Master Magus:</strong> Replace basic attack with any level 1-5 spell.</p>{{/if}}
+          </div>
+          
+          {{#if (gte level 3)}}
+          <div class="augmentation-selector">
+            <label>Current Augmentation:</label>
+            <select name="system.currentAugmentation">
+              <option value="">None</option>
+              <option value="amplify" {{#if (eq currentAugmentation "amplify")}}selected{{/if}}>Amplify</option>
+              <option value="split" {{#if (eq currentAugmentation "split")}}selected{{/if}}>Split</option>
+              <option value="hasten" {{#if (eq currentAugmentation "hasten")}}selected{{/if}}>Hasten</option>
+            </select>
+          </div>
+          {{/if}}
+        </div>
+      {{/if}}
+
+    </div>
+  </div>
+
+  <!-- Features Tab -->
+  <div class="tab" data-group="primary" data-tab="features">
+    <div class="features-section">
+      <h3>Class Features</h3>
+      
+      {{#if unlockedFeatures}}
+        <div class="features-list">
+          {{#each unlockedFeatures}}
+            <div class="feature-item">
+              <div class="feature-header">
+                <h4>{{this.name}}</h4>
+                <span class="feature-level">Level {{this.level}}</span>
+              </div>
+              <div class="feature-description">{{this.description}}</div>
+            </div>
+          {{/each}}
+        </div>
+      {{else}}
+        <p class="no-features">No class features unlocked yet.</p>
+      {{/if}}
+
+      <!-- Level Up Button -->
+      {{#if (lt level 20)}}
+        <div class="level-up-section">
+          <button type="button" id="level-up-btn" class="ctt-btn level-up">
+            <i class="fas fa-arrow-up"></i> Level Up to {{nextLevel}}
+          </button>
+        </div>
+      {{/if}}
+
+    </div>
+  </div>
+
+  <!-- Spells Tab -->
+  <div class="tab" data-group="primary" data-tab="spells">
+    <div class="spells-section">
+      <h3>Available Spells & Abilities</h3>
+      
+      {{#if availableSpells}}
+        {{#if (eq class "Monk")}}
+          <!-- Monk spells organized by category -->
+          {{#each spellCategories}}
+            <div class="spell-category">
+              <h4>{{@key}} Spells</h4>
+              <div class="spells-grid">
+                {{#each this}}
+                  <div class="spell-item" data-tier="{{this.tier}}">
+                    <div class="spell-header">
+                      <h5>{{this.name}}</h5>
+                      <span class="spell-type">{{this.type}}</span>
+                      <span class="spell-tier">Tier {{this.tier}}</span>
+                    </div>
+                    <div class="spell-cost">Cost: {{this.cost}}</div>
+                    <div class="spell-effect">{{this.effect}}</div>
+                    {{#if this.scaling}}<div class="spell-scaling">Scaling: {{this.scaling}}</div>{{/if}}
+                  </div>
+                {{/each}}
+              </div>
+            </div>
+          {{/each}}
+        {{else}}
+          <!-- Other classes - simple spell list -->
+          <div class="spells-grid">
+            {{#each availableSpells}}
+              <div class="spell-item">
+                <h5>{{this}}</h5>
+              </div>
+            {{/each}}
+          </div>
+        {{/if}}
+      {{else}}
+        <p class="no-spells">No spells available yet.</p>
+      {{/if}}
+
     </div>
   </div>
 
@@ -129,7 +316,7 @@
   <div class="tab" data-group="primary" data-tab="notes">
     <div class="notes-section">
       <h3>Character Notes</h3>
-      <textarea name="system.notes" placeholder="Character background, notes, etc...">{{notes}}</textarea>
+      <textarea name="system.notes" placeholder="Character background, pact details, ritual progress, etc...">{{notes}}</textarea>
     </div>
   </div>
 

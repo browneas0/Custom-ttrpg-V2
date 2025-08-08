@@ -1,12 +1,36 @@
 {
   "name": "custom-ttrpg",
   "version": "1.0.0",
-  "description": "1. Place folder in `FoundryVTT/Data/systems/custom-ttrpg/` 2. Enable **Custom TTRPG System** 3. Use **New Character** button in Actor Directory",
-  "main": "index.js",
+  "description": "A professional modular TTRPG system for Foundry VTT with editable character sheets, class progression, and dynamic menus",
+  "main": "module/init.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "echo 'Build process coming soon'",
+    "test": "echo 'Test suite coming soon'",
+    "lint": "echo 'Linting coming soon'",
+    "dev": "echo 'Development mode coming soon'"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "foundry-vtt",
+    "ttrpg",
+    "rpg",
+    "game-system",
+    "character-sheet",
+    "custom-system"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/custom-ttrpg-v2.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/custom-ttrpg-v2/issues"
+  },
+  "homepage": "https://github.com/yourusername/custom-ttrpg-v2#readme",
+  "foundryvtt": {
+    "compatibility": {
+      "minimum": "10",
+      "verified": "11"
+    }
+  }
 }

@@ -1,0 +1,118 @@
+<div class="spell-manager">
+  <!-- Header -->
+  <div class="spell-manager-header">
+    <h2>Spell Manager - {{actor.name}}</h2>
+    <div class="character-info">
+      <span class="class-badge">{{class}} Level {{level}}</span>
+    </div>
+  </div>
+
+  <!-- Resources Panel -->
+  <div class="resources-panel">
+    <h3>Resources</h3>
+    <div class="resources-grid">
+      {{#each resources}}
+        <div class="resource-display" data-resource="{{@key}}">
+          <div class="resource-label">{{this.description}}</div>
+          <div class="resource-controls">
+            <button type="button" class="resource-btn decrease" data-action="decrease" data-resource="{{@key}}">-</button>
+            <span class="resource-value">{{this.value}}/{{this.max}}</span>
+            <button type="button" class="resource-btn increase" data-action="increase" data-resource="{{@key}}">+</button>
+          </div>
+          <div class="resource-bar">
+            <div class="resource-fill" style="width: {{resourcePercent this.value this.max}}%; background-color: var(--ctt-{{this.color}})"></div>
+          </div>
+        </div>
+      {{/each}}
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="spell-manager-content">
+    <!-- Spell Selection -->
+    <div class="spell-selection">
+      <h3>Available Spells</h3>
+      
+      {{#if availableSpells}}
+        {{#each availableSpells}}
+          <div class="spell-category">
+            <h4>{{category}}</h4>
+            <div class="spells-grid">
+              {{#each spells}}
+                <div class="spell-item {{#if (eq ../selectedSpell.name this.name)}}selected{{/if}}" 
+                     data-spell-name="{{this.name}}" 
+                     data-category="{{../category}}">
+                  <div class="spell-header">
+                    <h5>{{this.name}}</h5>
+                    {{#if this.type}}<span class="spell-type">{{this.type}}</span>{{/if}}
+                    {{#if this.tier}}<span class="spell-tier">Tier {{this.tier}}</span>{{/if}}
+                  </div>
+                  {{#if this.cost}}<div class="spell-cost">Cost: {{this.cost}}</div>{{/if}}
+                  <div class="spell-effect">{{this.effect}}</div>
+                  {{#if this.scaling}}<div class="spell-scaling">Scaling: {{this.scaling}}</div>{{/if}}
+                </div>
+              {{/each}}
+            </div>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="no-spells">
+          <p>No spells available for this character.</p>
+        </div>
+      {{/if}}
+    </div>
+
+    <!-- Spell Casting Panel -->
+    <div class="spell-casting-panel">
+      <h3>Spell Casting</h3>
+      
+      {{#if selectedSpell}}
+        <div class="selected-spell">
+          <div class="spell-details">
+            <h4>{{selectedSpell.name}}</h4>
+            {{#if selectedSpell.type}}<p><strong>Type:</strong> {{selectedSpell.type}}</p>{{/if}}
+            {{#if selectedSpell.cost}}<p><strong>Cost:</strong> {{selectedSpell.cost}}</p>{{/if}}
+            <p><strong>Effect:</strong> {{selectedSpell.effect}}</p>
+            {{#if selectedSpell.scaling}}<p><strong>Scaling:</strong> {{selectedSpell.scaling}}</p>{{/if}}
+          </div>
+          
+          <div class="casting-controls">
+            {{#if canCast}}
+              <button type="button" id="cast-spell-btn" class="ctt-btn cast-spell">
+                <i class="fas fa-magic"></i> Cast Spell
+              </button>
+            {{else}}
+              <div class="cannot-cast">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Insufficient resources to cast this spell</span>
+              </div>
+            {{/if}}
+            <button type="button" id="cancel-cast-btn" class="ctt-btn cancel-cast">
+              <i class="fas fa-times"></i> Cancel
+            </button>
+          </div>
+        </div>
+      {{else}}
+        <div class="no-spell-selected">
+          <p>Select a spell from the list to cast it.</p>
+          <div class="casting-tips">
+            <h5>Casting Tips:</h5>
+            <ul>
+              <li>Click on any spell to select it for casting</li>
+              <li>Ensure you have sufficient resources</li>
+              <li>Some spells have scaling effects based on attributes</li>
+              <li>Spell effects will be applied immediately</li>
+            </ul>
+          </div>
+        </div>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="spell-manager-footer">
+    <div class="casting-info">
+      <p><i class="fas fa-info-circle"></i> Spell casting system is in development. More features coming soon!</p>
+    </div>
+  </div>
+</div>
