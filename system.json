@@ -6,7 +6,8 @@
   "authors": [{"name":"Your Name","url":""}],
   "compatibility": {"minimum":10,"verified":"11"},
   "esmodules": [
-    "module/init.js"
+    "module/init.js",
+    "test-system.js"
   ],
   "styles": [
     "styles/custom-ttrpg.css"
