@@ -2,9 +2,9 @@
 
 A professional modular TTRPG system with advanced UI features, class progression, and MMO-style equipment management.
 
-## 🚀 Current Status: READY FOR TESTING
+## 🚀 Current Status: 0.0.1 (Baseline)
 
-**Version:** 1.3.0  
+**Version:** 0.0.1  
 **Repository:** Successfully connected to GitHub  
 **Status:** All files validated and ready for Foundry VTT installation
 
@@ -17,7 +17,7 @@ A professional modular TTRPG system with advanced UI features, class progression
 - ✅ Inventory and spell management
 - ✅ Combat tracking and feat system
 
-### Advanced Features (NEW)
+### Advanced Features (0.0.1)
 - ✅ **Equipment Manager**: MMO-style equipment interface
   - 16 equipment slots (head, neck, shoulders, etc.)
   - Drag and drop functionality
@@ -34,12 +34,22 @@ A professional modular TTRPG system with advanced UI features, class progression
   - Search and filter items, spells, abilities
   - Export/import functionality
   - Categorized content management
+  - Add directly to character Inventory/Spells/Abilities
+
+### Sheet & Apps
+- ✅ Character sheet: Equipment, Abilities, Feats, Inventory, Combat
+- ✅ Equipment slots with set bonuses, loadouts, preferred gear
+- ✅ Abilities quick-use with costs/cooldowns and macros
+- ✅ Feats enable/disable with live bonuses and macros
+- ✅ Styled chat cards for Attack/Damage
+- ✅ Combat Tracker: token import, actor link, quick rolls, HP sync
+- ✅ Inventory Manager: double-click equip/unequip; overweight warning
 
 ## 🛠️ Installation
 
 ### Quick Install (Windows)
-1. Double-click `install-to-foundry.bat` in this folder
-2. Follow the prompts to automatically install to Foundry VTT
+1. Copy this project folder to your Foundry Data `systems` directory and name it `custom-ttrpg`
+2. Launch Foundry VTT and enable the system
 
 ### Manual Install
 1. Copy this entire folder to your Foundry VTT `systems` directory
