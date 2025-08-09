@@ -11,6 +11,11 @@ import { CharacterSheet } from './sheets/character-sheet.js';
 import { preloadClassInfo } from './class-loader.js';
 import { DiceEngine } from './rolls/engine.js';
 import { EffectsManager } from './effects/apply.js';
+import { SettingsManager } from './settings.js';
+import { TokenManager } from './tokens/hud.js';
+import { ChatCommands } from './chat/cards.js';
+import { AutomationEngine } from './automation/engine.js';
+import { ResourceTracker } from './resources/tracker.js';
 
 // Register Handlebars helpers
 Handlebars.registerHelper('eq', function(a, b) {
@@ -99,12 +104,22 @@ Hooks.once('init', async function() {
             ResetSettingsApp
         },
         DiceEngine,
-        EffectsManager
+        EffectsManager,
+        SettingsManager,
+        TokenManager,
+        ChatCommands,
+        AutomationEngine,
+        ResourceTracker
     };
 
     // Make systems globally accessible
     game.dice = DiceEngine;
     game.effects = EffectsManager;
+    game.settings = SettingsManager;
+    game.tokens = TokenManager;
+    game.chatCommands = ChatCommands;
+    game.automation = AutomationEngine;
+    game.resources = ResourceTracker;
 
     console.log('Custom TTRPG System | Initialized successfully!');
 });
