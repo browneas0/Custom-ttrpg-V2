@@ -234,7 +234,7 @@ export class DiceEngine {
   }
 
   /**
-   * Send roll to chat with enhanced formatting
+   * Send roll to chat with enhanced formatting and visual effects
    */
   static async sendToChat(result, options = {}) {
     const speaker = options.speaker || ChatMessage.getSpeaker();
@@ -242,7 +242,7 @@ export class DiceEngine {
     
     const content = this.formatRollForChat(result, flavor);
     
-    await ChatMessage.create({
+    const message = await ChatMessage.create({
       speaker: speaker,
       content: content,
       type: CONST.CHAT_MESSAGE_TYPES.ROLL,
@@ -253,6 +253,58 @@ export class DiceEngine {
         }
       }
     });
+
+    // Add visual effects based on roll results
+    setTimeout(() => {
+      this._addRollEffects(result, message);
+    }, 100);
+
+    return message;
+  }
+
+  /**
+   * Add visual effects based on roll results
+   */
+  static _addRollEffects(result, message) {
+    const target = `.chat-message[data-message-id="${message.id}"]`;
+    
+    // Check for critical rolls
+    const hasCritical = result.rolled.some(die => 
+      die.result === die.sides && die.sides === 20
+    );
+    const hasFumble = result.rolled.some(die => 
+      die.result === 1 && die.sides === 20
+    );
+
+    if (hasCritical) {
+      // Critical success effect
+      if (game.effects) {
+        game.effects.playEffect('critical-hit', target);
+      }
+    } else if (hasFumble) {
+      // Fumble effect - could add a specific fumble effect
+      console.log('Fumble rolled!');
+    }
+
+    // High damage rolls get extra effects
+    if (result.flavor?.toLowerCase().includes('damage') && result.total >= 15) {
+      if (game.effects) {
+        if (result.flavor.toLowerCase().includes('fire')) {
+          game.effects.playEffect('fire-damage', target);
+        } else if (result.flavor.toLowerCase().includes('ice')) {
+          game.effects.playEffect('ice-damage', target);
+        } else if (result.flavor.toLowerCase().includes('lightning')) {
+          game.effects.playEffect('lightning-damage', target);
+        }
+      }
+    }
+
+    // Healing effects
+    if (result.flavor?.toLowerCase().includes('healing')) {
+      if (game.effects) {
+        game.effects.playEffect('healing', target);
+      }
+    }
   }
 
   /**

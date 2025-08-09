@@ -10,6 +10,7 @@ import { CustomActor } from '../Actor/Actor.js';
 import { CharacterSheet } from './sheets/character-sheet.js';
 import { preloadClassInfo } from './class-loader.js';
 import { DiceEngine } from './rolls/engine.js';
+import { EffectsManager } from './effects/apply.js';
 
 // Register Handlebars helpers
 Handlebars.registerHelper('eq', function(a, b) {
@@ -97,11 +98,13 @@ Hooks.once('init', async function() {
             AbilitiesManager,
             ResetSettingsApp
         },
-        DiceEngine
+        DiceEngine,
+        EffectsManager
     };
 
-    // Make dice engine globally accessible
+    // Make systems globally accessible
     game.dice = DiceEngine;
+    game.effects = EffectsManager;
 
     console.log('Custom TTRPG System | Initialized successfully!');
 });

@@ -193,6 +193,168 @@ export class CharacterSheet extends ActorSheet {
     
     ui.notifications.info(`${this.actor.name} reached level ${newLevel}!`);
   }
+
+  async _onAttributeRoll(event) {
+    event.preventDefault();
+    const attribute = event.currentTarget.dataset.attribute;
+    const modifier = this.actor.getAttributeModifier(attribute);
+    
+    await game.dice.rollAttributeCheck(attribute.toUpperCase(), modifier, {
+      speaker: ChatMessage.getSpeaker({ actor: this.actor })
+    });
+  }
+
+  async _onSkillRoll(event) {
+    event.preventDefault();
+    const skill = event.currentTarget.dataset.skill;
+    const bonus = this.actor.getSkillBonus(skill);
+    
+    await game.dice.roll(`1d20+${bonus}`, {
+      flavor: `${skill.charAt(0).toUpperCase() + skill.slice(1)} Check`,
+      speaker: ChatMessage.getSpeaker({ actor: this.actor })
+    });
+  }
+
+  async _onAttackRoll(event) {
+    event.preventDefault();
+    const weapon = event.currentTarget.dataset.weapon;
+    const attackBonus = this.actor.system.combat.attackBonus || 0;
+    
+    await game.dice.roll(`1d20+${attackBonus}`, {
+      flavor: `${weapon || 'Weapon'} Attack`,
+      speaker: ChatMessage.getSpeaker({ actor: this.actor })
+    });
+  }
+
+  async _onDamageRoll(event) {
+    event.preventDefault();
+    const damageExpression = event.currentTarget.dataset.damage || '1d6';
+    const damageType = event.currentTarget.dataset.damageType || 'physical';
+    
+    await game.dice.rollDamage(damageExpression, damageType, {
+      speaker: ChatMessage.getSpeaker({ actor: this.actor })
+    });
+  }
+
+  async _onItemEquip(event) {
+    event.preventDefault();
+    const itemId = event.currentTarget.dataset.itemId;
+    const category = event.currentTarget.dataset.category;
+    
+    await this.actor.toggleEquipped(itemId, category);
+  }
+
+  async _onItemDelete(event) {
+    event.preventDefault();
+    const itemId = event.currentTarget.dataset.itemId;
+    
+    const confirmed = await Dialog.confirm({
+      title: "Delete Item",
+      content: "Are you sure you want to delete this item?",
+      defaultYes: false
+    });
+
+    if (confirmed) {
+      await this.actor.removeFromInventory(itemId);
+    }
+  }
+
+  async _onHealthChange(event) {
+    event.preventDefault();
+    const action = event.currentTarget.dataset.action;
+    const amount = parseInt(event.currentTarget.dataset.amount) || 1;
+    
+    if (action === 'damage') {
+      await this.actor.takeDamage(amount);
+    } else if (action === 'heal') {
+      await this.actor.heal(amount);
+    }
+  }
+
+  async _onInitiativeRoll(event) {
+    event.preventDefault();
+    const dexModifier = this.actor.getAttributeModifier('dex');
+    const initiativeBonus = this.actor.system.combat.initiative || 0;
+    const totalBonus = dexModifier + initiativeBonus;
+    
+    await game.dice.roll(`1d20+${totalBonus}`, {
+      flavor: 'Initiative',
+      speaker: ChatMessage.getSpeaker({ actor: this.actor })
+    });
+  }
+
+  async _onQuickRoll(event) {
+    event.preventDefault();
+    const expression = event.currentTarget.dataset.roll;
+    const flavor = event.currentTarget.dataset.flavor || '';
+    
+    await game.dice.roll(expression, {
+      flavor: flavor,
+      speaker: ChatMessage.getSpeaker({ actor: this.actor })
+    });
+  }
+
+  async _onShortRest(event) {
+    event.preventDefault();
+    
+    // Simple short rest - restore some resources
+    const updates = {};
+    const resources = this.actor.system.resources;
+    
+    Object.keys(resources).forEach(resource => {
+      if (resources[resource].max > 0) {
+        const restored = Math.floor(resources[resource].max / 2);
+        updates[`system.resources.${resource}.value`] = Math.min(
+          resources[resource].max,
+          resources[resource].value + restored
+        );
+      }
+    });
+    
+    if (Object.keys(updates).length > 0) {
+      await this.actor.update(updates);
+      ui.notifications.info(`${this.actor.name} takes a short rest and recovers some resources.`);
+    }
+  }
+
+  async _onLongRest(event) {
+    event.preventDefault();
+    await this.actor.longRest();
+  }
+
+  // Drag and drop support
+  async _onDrop(event) {
+    const data = TextEditor.getDragEventData(event);
+    
+    if (data.type === "Item") {
+      return this._onDropItem(event, data);
+    }
+    
+    return super._onDrop(event);
+  }
+
+  async _onDropItem(event, data) {
+    if (!this.actor.isOwner) return false;
+    
+    const item = await Item.implementation.fromDropData(data);
+    if (!item) return false;
+    
+    // Add item to appropriate inventory category
+    const category = this._getItemCategory(item);
+    await this.actor.addToInventory(item.toObject(), category);
+    
+    return true;
+  }
+
+  _getItemCategory(item) {
+    switch (item.type) {
+      case 'weapon': return 'weapons';
+      case 'armor': return 'armor';
+      case 'consumable': return 'consumables';
+      case 'valuable': return 'valuables';
+      default: return 'equipment';
+    }
+  }
 }
 
 // Register Handlebars helpers
