@@ -32,6 +32,12 @@
     <button type="button" id="add-combatant-btn" class="ctt-btn add-combatant">
       <i class="fas fa-plus"></i> Add Combatant
     </button>
+    <button type="button" id="import-selected-btn" class="ctt-btn">
+      <i class="fas fa-users"></i> Add Selected Tokens
+    </button>
+    <button type="button" id="import-all-btn" class="ctt-btn">
+      <i class="fas fa-layer-group"></i> Import Scene Tokens
+    </button>
   </div>
 
   <!-- Current Turn Display -->
@@ -122,6 +128,21 @@
             
             <!-- Combatant Actions -->
             <div class="combatant-actions">
+              <button type="button" class="action-btn link-actor-btn" 
+                      data-combatant-id="{{this.id}}" 
+                      title="Link to Actor">
+                <i class="fas fa-link"></i>
+              </button>
+              <button type="button" class="action-btn quick-atk-btn" 
+                      data-combatant-id="{{this.id}}" 
+                      title="Quick Attack Roll">
+                <i class="fas fa-sword"></i>
+              </button>
+              <button type="button" class="action-btn quick-dmg-btn" 
+                      data-combatant-id="{{this.id}}" 
+                      title="Quick Damage Roll">
+                <i class="fas fa-burst"></i>
+              </button>
               <button type="button" class="action-btn damage-btn" 
                       data-combatant-id="{{this.id}}" 
                       title="Apply Damage">

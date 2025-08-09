@@ -46,19 +46,120 @@ export class CombatTracker extends Application {
     html.find('#end-combat-btn').click(this._onEndCombat.bind(this));
     html.find('#next-turn-btn').click(this._onNextTurn.bind(this));
     html.find('#previous-turn-btn').click(this._onPreviousTurn.bind(this));
+    html.find('#import-selected-btn').click(this._onImportSelected.bind(this));
+    html.find('#import-all-btn').click(this._onImportAll.bind(this));
     
     // Combatant management
     html.find('#add-combatant-btn').click(this._onAddCombatant.bind(this));
     html.find('.remove-combatant-btn').click(this._onRemoveCombatant.bind(this));
     html.find('.edit-initiative-btn').click(this._onEditInitiative.bind(this));
+    html.find('.link-actor-btn').click(this._onLinkActor.bind(this));
     
     // Health management
     html.find('.damage-btn').click(this._onDamage.bind(this));
     html.find('.heal-btn').click(this._onHeal.bind(this));
+    html.find('.quick-atk-btn').click(this._onQuickAttack.bind(this));
+    html.find('.quick-dmg-btn').click(this._onQuickDamage.bind(this));
     
     // Status effects
     html.find('.add-status-btn').click(this._onAddStatus.bind(this));
     html.find('.remove-status-btn').click(this._onRemoveStatus.bind(this));
+  }
+
+  _linkedActorOf(combatant) {
+    if (!combatant?.actorId) return null;
+    return game.actors.get(combatant.actorId) || null;
+  }
+
+  async _onImportSelected(event) {
+    event.preventDefault();
+    const tokens = canvas?.tokens?.controlled || [];
+    if (!tokens.length) return ui.notifications.warn('Select tokens to import.');
+    for (const t of tokens) {
+      const a = t.actor;
+      const name = t.name || a?.name || 'Token';
+      const maxHp = a?.system?.attributes?.hp?.max ?? 20;
+      const curHp = a?.system?.attributes?.hp?.value ?? maxHp;
+      const ac = a?.system?.combat?.defense ?? 10;
+      this.combatants.push({
+        id: foundry.utils.randomID(),
+        name, type: (a ? 'player' : 'npc'),
+        maxHp: maxHp, currentHp: curHp,
+        initiativeBonus: 0, initiative: 0, ac,
+        statusEffects: [], isActive: true,
+        actorId: a?.id || null
+      });
+    }
+    this.render(true);
+  }
+
+  async _onImportAll(event) {
+    event.preventDefault();
+    const tokens = canvas?.tokens?.placeables || [];
+    if (!tokens.length) return ui.notifications.warn('No tokens on scene.');
+    for (const t of tokens) {
+      const a = t.actor;
+      const name = t.name || a?.name || 'Token';
+      const maxHp = a?.system?.attributes?.hp?.max ?? 20;
+      const curHp = a?.system?.attributes?.hp?.value ?? maxHp;
+      const ac = a?.system?.combat?.defense ?? 10;
+      this.combatants.push({
+        id: foundry.utils.randomID(),
+        name, type: (a ? 'player' : 'npc'),
+        maxHp: maxHp, currentHp: curHp,
+        initiativeBonus: 0, initiative: 0, ac,
+        statusEffects: [], isActive: true,
+        actorId: a?.id || null
+      });
+    }
+    this.render(true);
+  }
+
+  async _onLinkActor(event) {
+    event.preventDefault();
+    const id = event.currentTarget.dataset.combatantId;
+    const c = this.combatants.find(x => x.id === id);
+    if (!c) return;
+    const actors = game.actors.filter(a => a.type === 'character');
+    if (!actors.length) return ui.notifications.warn('No actors available.');
+    const opts = actors.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+    const content = `<form><div class="form-group"><label>Actor:</label><select id="lnk">${opts}</select></div></form>`;
+    new Dialog({ title: `Link Actor - ${c.name}`, content, buttons: {
+      link: { label: 'Link', callback: async html => { c.actorId = html.find('#lnk').val(); this.render(true); }},
+      close: { label: 'Close' }
+    }}).render(true);
+  }
+
+  async _onQuickAttack(event) {
+    event.preventDefault();
+    const id = event.currentTarget.dataset.combatantId;
+    const c = this.combatants.find(x => x.id === id);
+    if (!c) return;
+    const actor = this._linkedActorOf(c);
+    const atk = Number(actor?.system?.combat?.attackBonus ?? 0);
+    const eq = actor?.system?.equipmentBonuses || {};
+    const extra = Number(eq.attack || 0);
+    const crit = Number(actor?.system?.attributes?.crit ?? 20);
+    const roll = await (new Roll(`1d20 + ${atk} + ${extra}`)).roll({ async: true });
+    const d20 = roll.terms?.[0]?.results?.[0]?.result || roll.dice?.[0]?.total;
+    const isCrit = d20 >= crit;
+    const card = `<div class="ctt-roll-card"><div><b>${c.name} Attack</b> ${isCrit ? '<span style="color:#ffd700">(CRIT!)</span>' : ''}</div><div>Total: <b>${roll.total}</b></div><div class="muted">Base ${atk} + Equip ${extra}</div></div>`;
+    roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }), flavor: card });
+  }
+
+  async _onQuickDamage(event) {
+    event.preventDefault();
+    const id = event.currentTarget.dataset.combatantId;
+    const c = this.combatants.find(x => x.id === id);
+    if (!c) return;
+    const actor = this._linkedActorOf(c);
+    const dice = actor?.system?.combat?.damageDice || '1d4';
+    const bonus = Number(actor?.system?.combat?.damageBonus || 0);
+    const eq = actor?.system?.equipmentBonuses || {};
+    const extra = Number(eq.attack || 0);
+    const roll = await (new Roll(`${dice} + ${bonus} + ${extra}`)).roll({ async: true });
+    const card = `<div class="ctt-roll-card"><div><b>${c.name} Damage</b></div><div>Total: <b>${roll.total}</b></div><div class="muted">Dice ${dice} + Bonus ${bonus} + Equip ${extra}</div></div>`;
+    roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor }), flavor: card });
   }
 
   async _onStartCombat(event) {
@@ -315,6 +416,12 @@ export class CombatTracker extends Application {
             const type = html.find('#damage-type').val();
             
             combatant.currentHp = Math.max(0, combatant.currentHp - damage);
+            // Sync to linked actor if available
+            const actor = this._linkedActorOf(combatant);
+            if (actor?.system?.attributes?.hp) {
+              const cur = Number(actor.system.attributes.hp.value || 0);
+              await actor.update({ 'system.attributes.hp.value': Math.max(0, cur - damage) });
+            }
             
             this.render(true);
             
@@ -360,6 +467,13 @@ export class CombatTracker extends Application {
             const healing = parseInt(html.find('#heal-amount').val()) || 1;
             
             combatant.currentHp = Math.min(combatant.maxHp, combatant.currentHp + healing);
+            // Sync to linked actor if available
+            const actor = this._linkedActorOf(combatant);
+            if (actor?.system?.attributes?.hp) {
+              const cur = Number(actor.system.attributes.hp.value || 0);
+              const max = Number(actor.system.attributes.hp.max || combatant.maxHp || 0);
+              await actor.update({ 'system.attributes.hp.value': Math.min(max, cur + healing) });
+            }
             
             this.render(true);
             ui.notifications.info(`${combatant.name} heals ${healing} HP! (${combatant.currentHp}/${combatant.maxHp} HP)`);

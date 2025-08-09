@@ -29,6 +29,10 @@
     <a class="item" data-tab="resources">Resources</a>
     <a class="item" data-tab="features">Features</a>
     <a class="item" data-tab="spells">Spells</a>
+    <a class="item" data-tab="abilities">Abilities</a>
+    <a class="item" data-tab="feats">Feats</a>
+    <a class="item" data-tab="inventory">Inventory</a>
+    <a class="item" data-tab="equipment">Equipment</a>
     <a class="item" data-tab="notes">Notes</a>
   </nav>
 
@@ -169,6 +173,31 @@
           <label>Utility Dice</label>
           <input name="system.combat.utilityDice" type="text" value="{{actor.system.combat.utilityDice}}"/>
         </div>
+        <div class="combat-stat">
+          <label>Rolls</label>
+          <div>
+            <button type="button" id="btn-attack-roll" class="ctt-btn">Attack</button>
+            <button type="button" id="btn-damage-roll" class="ctt-btn">Damage</button>
+            <button type="button" id="btn-add-attack-macro" class="ctt-btn" title="Add Attack Macro to Hotbar">+Atk Macro</button>
+            <button type="button" id="btn-add-damage-macro" class="ctt-btn" title="Add Damage Macro to Hotbar">+Dmg Macro</button>
+          </div>
+        </div>
+        <div class="combat-stat">
+          <label>Preferences</label>
+          <div>
+            <label style="display:flex;align-items:center;gap:6px;">
+              <input type="checkbox" id="pref-auto-apply" {{#if actor.system.preferences.autoApply}}checked{{/if}} />
+              Auto-apply preferred gear on open
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+              Theme:
+              <select id="pref-theme">
+                <option value="dark" {{#if (eq actor.system.preferences.theme "dark")}}selected{{/if}}>Dark</option>
+                <option value="light" {{#if (eq actor.system.preferences.theme "light")}}selected{{/if}}>Light</option>
+              </select>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -273,6 +302,283 @@
           <p>No spells available for this class.</p>
         </div>
       {{/if}}
+    </div>
+
+    <!-- Feats Tab -->
+    <div class="tab feats" data-group="primary" data-tab="feats">
+      <h3>Feats</h3>
+      <div class="feats-toolbar" style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+        <input type="text" id="feat-search" placeholder="Search feats..." style="flex:1;">
+        <select id="feat-category-filter">
+          <option value="all">All Categories</option>
+          <option>Combat</option>
+          <option>Magic</option>
+          <option>Skills</option>
+          <option>Social</option>
+          <option>Survival</option>
+        </select>
+        <button type="button" id="btn-open-feats" class="ctt-btn">Open Feat Manager</button>
+      </div>
+      <div class="sheet-feats">
+        {{#if sheetFeats.length}}
+          {{#each sheetFeats}}
+            <div class="sheet-feat-item" data-feat-id="{{this.id}}" data-category="{{this.category}}">
+              <div class="sheet-feat-head">
+                <div class="name">{{this.name}}</div>
+                <div class="tags"><span class="badge">{{this.category}}</span></div>
+              </div>
+              <div class="desc">{{this.description}}</div>
+              <ul class="benefits">
+                {{#each this.benefits}}<li>{{this}}</li>{{/each}}
+              </ul>
+              <div class="actions">
+                <label class="toggle"><input type="checkbox" class="feat-enabled" {{#if (or (not this.enabled) this.enabled)}}checked{{/if}}> Enabled</label>
+                <button type="button" class="ctt-btn feat-macro">Macro</button>
+                <button type="button" class="ctt-btn feat-remove">Remove</button>
+              </div>
+            </div>
+          {{/each}}
+        {{else}}
+          <p>No feats yet. Use the Feat Manager to add feats.</p>
+        {{/if}}
+      </div>
+    </div>
+
+    <!-- Abilities Tab -->
+    <div class="tab abilities" data-group="primary" data-tab="abilities">
+      <h3>Abilities</h3>
+      <div style="margin-bottom:8px;">
+        <button type="button" id="btn-open-abilities" class="ctt-btn"><i class="fas fa-star"></i> Open Abilities Manager</button>
+      </div>
+      {{#if sheetAbilities.length}}
+        <div class="sheet-abilities-list">
+          {{#each sheetAbilities}}
+            <div class="sheet-ability-item" data-ability-id="{{this.id}}">
+              <div class="sheet-ability-header">
+                <div class="sheet-ability-name">{{this.name}}</div>
+                <div class="sheet-ability-meta">
+                  {{#if this.category}}<span class="badge">{{this.category}}</span>{{/if}}
+                  {{#if this.type}}<span class="badge">{{this.type}}</span>{{/if}}
+                </div>
+              </div>
+              {{#if this.description}}<div class="sheet-ability-desc">{{this.description}}</div>{{/if}}
+              <div class="sheet-ability-bottom">
+                <div class="sheet-ability-costs">
+                  {{#if this.cost}}
+                    {{#each this.cost}}
+                      <span class="cost-chip">{{@key}}: {{this}}</span>
+                    {{/each}}
+                  {{/if}}
+                  {{#if (and ../abilityCooldowns (lookup ../abilityCooldowns this.id))}}
+                    <span class="cd-chip">CD: {{lookup (lookup ../abilityCooldowns this.id) 'remaining'}}s</span>
+                  {{/if}}
+                </div>
+                <div class="sheet-ability-actions">
+                  <button type="button" class="ctt-btn sheet-ability-use">Use</button>
+                  <button type="button" class="ctt-btn sheet-ability-macro" title="Add macro to hotbar">Macro</button>
+                  <button type="button" class="ctt-btn sheet-ability-remove" title="Remove from character">Remove</button>
+                </div>
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      {{else}}
+        <p>No abilities yet. Use the Abilities Manager to add some.</p>
+      {{/if}}
+    </div>
+
+    <!-- Inventory Tab (Backpack & Drop Zone) -->
+    <div class="tab inventory" data-group="primary" data-tab="inventory">
+      <h3>Backpack</h3>
+      <div id="sheet-drop-zone" class="drop-zone" title="Drag items here to add/equip">
+        <i class="fas fa-backpack"></i>
+        <span>Drag items here from your backpack or compendium</span>
+      </div>
+      {{#if actor.system.inventory}}
+        <div class="sheet-inventory-list">
+          {{#each actor.system.inventory}}
+            {{#if this.length}}
+              <div class="sheet-inv-category">
+                <h4>{{@key}}</h4>
+                <div class="sheet-inv-items">
+                  {{#each this}}
+                    <div class="sheet-inv-item {{#if this.equipped}}equipped{{/if}}" data-item-id="{{this.id}}" data-category="{{@../key}}" draggable="true" title="Drag to Equipment slots to equip">
+                      <span class="name">{{this.name}}</span>
+                      {{#if this.equipped}}<span class="badge">Equipped</span>{{/if}}
+                    </div>
+                  {{/each}}
+                </div>
+              </div>
+            {{/if}}
+          {{/each}}
+        </div>
+      {{else}}
+        <p>No items yet.</p>
+      {{/if}}
+    </div>
+
+    <!-- Equipment Tab -->
+    <div class="tab equipment" data-group="primary" data-tab="equipment">
+      <h3>Equipped Items</h3>
+      <div class="equip-actions">
+        <button type="button" id="btn-equip-preferred" class="ctt-btn">Equip Preferred</button>
+        <button type="button" id="btn-save-loadout" class="ctt-btn">Save Loadout</button>
+        <button type="button" id="btn-load-loadout" class="ctt-btn">Load Loadout</button>
+      </div>
+      <div class="equipment-grid">
+        <div class="equip-slot" data-slot="head">
+          <div class="slot-label">Helm</div>
+          <div class="slot-item" title="{{actor.system.equipment.head.name}}">{{actor.system.equipment.head.name}}</div>
+          {{#if actor.system.equipment.head}}
+            <button type="button" class="slot-unequip" data-slot="head" title="Unequip"><i class="fas fa-times"></i></button>
+          {{/if}}
+          <button type="button" class="slot-pick" data-slot="head" title="Pick from Backpack"><i class="fas fa-hand-pointer"></i></button>
+          <button type="button" class="slot-compare" data-slot="head" title="Compare"><i class="fas fa-balance-scale"></i></button>
+          <button type="button" class="slot-auto" data-slot="head" title="Auto-equip best"><i class="fas fa-wand-magic-sparkles"></i></button>
+        </div>
+        <div class="equip-slot" data-slot="chest">
+          <div class="slot-label">Chest</div>
+          <div class="slot-item" title="{{actor.system.equipment.chest.name}}">{{actor.system.equipment.chest.name}}</div>
+          {{#if actor.system.equipment.chest}}
+            <button type="button" class="slot-unequip" data-slot="chest" title="Unequip"><i class="fas fa-times"></i></button>
+          {{/if}}
+          <button type="button" class="slot-pick" data-slot="chest" title="Pick from Backpack"><i class="fas fa-hand-pointer"></i></button>
+          <button type="button" class="slot-compare" data-slot="chest" title="Compare"><i class="fas fa-balance-scale"></i></button>
+          <button type="button" class="slot-auto" data-slot="chest" title="Auto-equip best"><i class="fas fa-wand-magic-sparkles"></i></button>
+        </div>
+        <div class="equip-slot" data-slot="legs">
+          <div class="slot-label">Legs</div>
+          <div class="slot-item" title="{{actor.system.equipment.legs.name}}">{{actor.system.equipment.legs.name}}</div>
+          {{#if actor.system.equipment.legs}}
+            <button type="button" class="slot-unequip" data-slot="legs" title="Unequip"><i class="fas fa-times"></i></button>
+          {{/if}}
+          <button type="button" class="slot-pick" data-slot="legs" title="Pick from Backpack"><i class="fas fa-hand-pointer"></i></button>
+          <button type="button" class="slot-compare" data-slot="legs" title="Compare"><i class="fas fa-balance-scale"></i></button>
+          <button type="button" class="slot-auto" data-slot="legs" title="Auto-equip best"><i class="fas fa-wand-magic-sparkles"></i></button>
+        </div>
+        <div class="equip-slot" data-slot="feet">
+          <div class="slot-label">Boots</div>
+          <div class="slot-item" title="{{actor.system.equipment.feet.name}}">{{actor.system.equipment.feet.name}}</div>
+          {{#if actor.system.equipment.feet}}
+            <button type="button" class="slot-unequip" data-slot="feet" title="Unequip"><i class="fas fa-times"></i></button>
+          {{/if}}
+          <button type="button" class="slot-pick" data-slot="feet" title="Pick from Backpack"><i class="fas fa-hand-pointer"></i></button>
+          <button type="button" class="slot-compare" data-slot="feet" title="Compare"><i class="fas fa-balance-scale"></i></button>
+          <button type="button" class="slot-auto" data-slot="feet" title="Auto-equip best"><i class="fas fa-wand-magic-sparkles"></i></button>
+        </div>
+        <div class="equip-slot" data-slot="ring1">
+          <div class="slot-label">Ring 1</div>
+          <div class="slot-item" title="{{actor.system.equipment.ring1.name}}">{{actor.system.equipment.ring1.name}}</div>
+          {{#if actor.system.equipment.ring1}}
+            <button type="button" class="slot-unequip" data-slot="ring1" title="Unequip"><i class="fas fa-times"></i></button>
+          {{/if}}
+          <button type="button" class="slot-pick" data-slot="ring1" title="Pick from Backpack"><i class="fas fa-hand-pointer"></i></button>
+          <button type="button" class="slot-compare" data-slot="ring1" title="Compare"><i class="fas fa-balance-scale"></i></button>
+          <button type="button" class="slot-auto" data-slot="ring1" title="Auto-equip best"><i class="fas fa-wand-magic-sparkles"></i></button>
+        </div>
+        <div class="equip-slot" data-slot="ring2">
+          <div class="slot-label">Ring 2</div>
+          <div class="slot-item" title="{{actor.system.equipment.ring2.name}}">{{actor.system.equipment.ring2.name}}</div>
+          {{#if actor.system.equipment.ring2}}
+            <button type="button" class="slot-unequip" data-slot="ring2" title="Unequip"><i class="fas fa-times"></i></button>
+          {{/if}}
+          <button type="button" class="slot-pick" data-slot="ring2" title="Pick from Backpack"><i class="fas fa-hand-pointer"></i></button>
+          <button type="button" class="slot-compare" data-slot="ring2" title="Compare"><i class="fas fa-balance-scale"></i></button>
+          <button type="button" class="slot-auto" data-slot="ring2" title="Auto-equip best"><i class="fas fa-wand-magic-sparkles"></i></button>
+        </div>
+        <div class="equip-slot" data-slot="trinket1">
+          <div class="slot-label">Trinket</div>
+          <div class="slot-item" title="{{actor.system.equipment.trinket1.name}}">{{actor.system.equipment.trinket1.name}}</div>
+          {{#if actor.system.equipment.trinket1}}
+            <button type="button" class="slot-unequip" data-slot="trinket1" title="Unequip"><i class="fas fa-times"></i></button>
+          {{/if}}
+          <button type="button" class="slot-pick" data-slot="trinket1" title="Pick from Backpack"><i class="fas fa-hand-pointer"></i></button>
+          <button type="button" class="slot-compare" data-slot="trinket1" title="Compare"><i class="fas fa-balance-scale"></i></button>
+          <button type="button" class="slot-auto" data-slot="trinket1" title="Auto-equip best"><i class="fas fa-wand-magic-sparkles"></i></button>
+        </div>
+        <div class="equip-slot" data-slot="magicItem">
+          <div class="slot-label">Magic Item</div>
+          <div class="slot-item" title="{{actor.system.equipment.magicItem.name}}">{{actor.system.equipment.magicItem.name}}</div>
+          {{#if actor.system.equipment.magicItem}}
+            <button type="button" class="slot-unequip" data-slot="magicItem" title="Unequip"><i class="fas fa-times"></i></button>
+          {{/if}}
+          <button type="button" class="slot-pick" data-slot="magicItem" title="Pick from Backpack"><i class="fas fa-hand-pointer"></i></button>
+          <button type="button" class="slot-compare" data-slot="magicItem" title="Compare"><i class="fas fa-balance-scale"></i></button>
+          <button type="button" class="slot-auto" data-slot="magicItem" title="Auto-equip best"><i class="fas fa-wand-magic-sparkles"></i></button>
+        </div>
+        <div class="equip-slot" data-slot="mainHand">
+          <div class="slot-label">Main Hand</div>
+          <div class="slot-item" title="{{actor.system.equipment.mainHand.name}}">{{actor.system.equipment.mainHand.name}}</div>
+          {{#if actor.system.equipment.mainHand}}
+            <button type="button" class="slot-unequip" data-slot="mainHand" title="Unequip"><i class="fas fa-times"></i></button>
+          {{/if}}
+          <button type="button" class="slot-pick" data-slot="mainHand" title="Pick from Backpack"><i class="fas fa-hand-pointer"></i></button>
+          <button type="button" class="slot-compare" data-slot="mainHand" title="Compare"><i class="fas fa-balance-scale"></i></button>
+          <button type="button" class="slot-auto" data-slot="mainHand" title="Auto-equip best"><i class="fas fa-wand-magic-sparkles"></i></button>
+        </div>
+        <div class="equip-slot" data-slot="offHand">
+          <div class="slot-label">Off Hand</div>
+          <div class="slot-item" title="{{actor.system.equipment.offHand.name}}">{{actor.system.equipment.offHand.name}}</div>
+          {{#if actor.system.equipment.offHand}}
+            <button type="button" class="slot-unequip" data-slot="offHand" title="Unequip"><i class="fas fa-times"></i></button>
+          {{/if}}
+          <button type="button" class="slot-pick" data-slot="offHand" title="Pick from Backpack"><i class="fas fa-hand-pointer"></i></button>
+          <button type="button" class="slot-compare" data-slot="offHand" title="Compare"><i class="fas fa-balance-scale"></i></button>
+          <button type="button" class="slot-auto" data-slot="offHand" title="Auto-equip best"><i class="fas fa-wand-magic-sparkles"></i></button>
+        </div>
+        <div class="equip-slot" data-slot="ranged">
+          <div class="slot-label">Ranged</div>
+          <div class="slot-item" title="{{actor.system.equipment.ranged.name}}">{{actor.system.equipment.ranged.name}}</div>
+          {{#if actor.system.equipment.ranged}}
+            <button type="button" class="slot-unequip" data-slot="ranged" title="Unequip"><i class="fas fa-times"></i></button>
+          {{/if}}
+          <button type="button" class="slot-pick" data-slot="ranged" title="Pick from Backpack"><i class="fas fa-hand-pointer"></i></button>
+          <button type="button" class="slot-compare" data-slot="ranged" title="Compare"><i class="fas fa-balance-scale"></i></button>
+          <button type="button" class="slot-auto" data-slot="ranged" title="Auto-equip best"><i class="fas fa-wand-magic-sparkles"></i></button>
+        </div>
+      </div>
+      <div class="equipment-bonus-summary">
+        <h4>Equipment Bonuses</h4>
+        <div class="bonus-list">
+          <div class="bonus-row"><span>Attack:</span> <span>{{actor.system.equipmentBonuses.attack}}</span></div>
+          <div class="bonus-row"><span>Defense:</span> <span>{{actor.system.equipmentBonuses.defense}}</span></div>
+          <div class="bonus-row"><span>Magic:</span> <span>{{actor.system.equipmentBonuses.magic}}</span></div>
+          <div class="bonus-row"><span>Health:</span> <span>{{actor.system.equipmentBonuses.health}}</span></div>
+          <div class="bonus-row"><span>Mana:</span> <span>{{actor.system.equipmentBonuses.mana}}</span></div>
+          <div class="bonus-row"><span>Stamina:</span> <span>{{actor.system.equipmentBonuses.stamina}}</span></div>
+          <div class="bonus-row"><span>Crit Chance:</span> <span>{{actor.system.equipmentBonuses.critChance}}%</span></div>
+          <div class="bonus-row"><span>Crit Damage:</span> <span>{{actor.system.equipmentBonuses.critDamage}}%</span></div>
+          <div class="bonus-row"><span>Dodge:</span> <span>{{actor.system.equipmentBonuses.dodge}}%</span></div>
+          <div class="bonus-row"><span>Block:</span> <span>{{actor.system.equipmentBonuses.block}}%</span></div>
+        </div>
+        <h4 style="margin-top:8px;">Feat Bonuses</h4>
+        <div class="bonus-list">
+          <div class="bonus-row"><span>Attack:</span> <span>{{featBonuses.attack}}</span></div>
+          <div class="bonus-row"><span>Defense:</span> <span>{{featBonuses.defense}}</span></div>
+          <div class="bonus-row"><span>Damage:</span> <span>{{featBonuses.damage}}</span></div>
+        </div>
+        {{#if actor.system.setCounts}}
+        <div class="set-bonuses">
+          <h4>Sets</h4>
+          <div class="set-list">
+            {{#each actor.system.setCounts}}
+              <div class="bonus-row"><span>{{@key}}</span><span>x{{this}}</span>
+                <button type="button" class="set-info" data-set="{{@key}}" title="Set Details"><i class="fas fa-info-circle"></i></button>
+              </div>
+            {{/each}}
+          </div>
+          <div class="set-descs">
+            {{#each setDescriptions}}
+              <div class="set-desc-item"><strong>{{name}}</strong> ({{count}}):
+                {{#each thresholds}}
+                  <div>- {{threshold}}pc: <span style="{{#if active}}color:#2ecc71;font-weight:600;{{else}}opacity:0.6;{{/if}}">{{desc}}</span></div>
+                {{/each}}
+              </div>
+            {{/each}}
+          </div>
+        </div>
+        {{/if}}
+      </div>
     </div>
 
     <!-- Notes Tab -->

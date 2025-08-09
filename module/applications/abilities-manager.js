@@ -4,7 +4,7 @@ export class AbilitiesManager extends Application {
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
             id: "abilities-manager",
-            template: "templates/applications/abilities-manager.html",
+            template: `systems/${game.system.id}/templates/applications/abilities-manager.html`,
             title: "Abilities Manager",
             width: 1000,
             height: 800,
@@ -203,12 +203,14 @@ export class AbilitiesManager extends Application {
         const trackers = [];
 
         for (const [resourceName, resourceData] of Object.entries(resources)) {
-            if (typeof resourceData === 'object' && resourceData.hasOwnProperty('current') && resourceData.hasOwnProperty('max')) {
+            if (typeof resourceData === 'object' && resourceData.hasOwnProperty('value') && resourceData.hasOwnProperty('max')) {
+                const max = Number(resourceData.max) || 0;
+                const val = Math.min(max, Math.max(0, Number(resourceData.value) || 0));
                 trackers.push({
                     name: resourceName.charAt(0).toUpperCase() + resourceName.slice(1),
-                    current: resourceData.current,
-                    max: resourceData.max,
-                    percentage: (resourceData.current / resourceData.max) * 100
+                    current: val,
+                    max: max,
+                    percentage: max > 0 ? (val / max) * 100 : 0
                 });
             }
         }
@@ -339,9 +341,12 @@ export class AbilitiesManager extends Application {
 
     async useAbility(ability) {
         // Check if ability is on cooldown
-        const cooldowns = this.getAbilityCooldowns();
-        if (cooldowns[ability.id]) {
-            ui.notifications.warn(`${ability.name} is on cooldown for ${cooldowns[ability.id].remaining} seconds`);
+        const now = Date.now();
+        const cds = this.actor.system.abilityCooldowns || {};
+        const cdData = cds[ability.id];
+        if (cdData && cdData.endTime > now) {
+            const remaining = Math.ceil((cdData.endTime - now) / 1000);
+            ui.notifications.warn(`${ability.name} is on cooldown for ${remaining} seconds`);
             return;
         }
 
@@ -352,6 +357,14 @@ export class AbilitiesManager extends Application {
                 ui.notifications.warn(`Not enough resources to use ${ability.name}`);
                 return;
             }
+            // Deduct costs
+            const updates = {};
+            for (const [resName, amt] of Object.entries(ability.cost)) {
+                const path = `system.resources.${resName}.value`;
+                const current = Number(this.actor.system.resources?.[resName]?.value || 0);
+                updates[path] = Math.max(0, current - Number(amt || 0));
+            }
+            if (Object.keys(updates).length) await this.actor.update(updates);
         }
 
         // Apply ability effects
@@ -362,21 +375,22 @@ export class AbilitiesManager extends Application {
             await this.setAbilityCooldown(ability.id, ability.cooldown);
         }
 
+        // Chat card
+        const flavor = `Ability: <b>${ability.name}</b>${ability.description ? ` – ${ability.description}` : ''}`;
+        ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: this.actor }), content: flavor });
+
         // Update display
         this.render(true);
-        
-        ui.notifications.info(`Used ${ability.name}!`);
     }
 
     async checkResourceCost(cost) {
         const resources = this.actor.system.resources || {};
-        
         for (const [resourceName, amount] of Object.entries(cost)) {
-            if (!resources[resourceName] || resources[resourceName].current < amount) {
+            const res = resources[resourceName];
+            if (!res || (Number(res.value || 0) < Number(amount || 0))) {
                 return false;
             }
         }
-        
         return true;
     }
 
@@ -406,11 +420,10 @@ export class AbilitiesManager extends Application {
 
     async applyHealEffect(effect) {
         const healAmount = this.calculateEffectValue(effect.value);
-        const currentHP = this.actor.system.attributes?.hp?.current || 0;
+        const currentHP = this.actor.system.attributes?.hp?.value || 0;
         const maxHP = this.actor.system.attributes?.hp?.max || 0;
-        
-        const newHP = Math.min(currentHP + healAmount, maxHP);
-        await this.actor.update({ 'system.attributes.hp.current': newHP });
+        const newHP = Math.min(maxHP, currentHP + healAmount);
+        await this.actor.update({ 'system.attributes.hp.value': newHP });
     }
 
     async applyDamageEffect(effect) {
@@ -439,25 +452,30 @@ export class AbilitiesManager extends Application {
 
     async applyResourceEffect(effect) {
         const resources = this.actor.system.resources || {};
-        
-        for (const [resourceName, amount] of Object.entries(effect.resources)) {
-            if (resources[resourceName]) {
-                const newAmount = Math.max(0, resources[resourceName].current + amount);
-                await this.actor.update({ [`system.resources.${resourceName}.current`]: newAmount });
+        for (const [resourceName, amount] of Object.entries(effect.resources || {})) {
+            const res = resources[resourceName];
+            if (res) {
+                const max = Number(res.max) || 0;
+                const cur = Number(res.value) || 0;
+                const next = Math.min(max, Math.max(0, cur + Number(amount || 0)));
+                await this.actor.update({ [`system.resources.${resourceName}.value`]: next });
             }
         }
     }
 
     calculateEffectValue(value) {
         if (typeof value === 'number') return value;
-        if (typeof value === 'string' && value.includes('d')) {
-            // Parse dice notation like "2d6"
-            const [count, sides] = value.split('d').map(Number);
-            let total = 0;
-            for (let i = 0; i < count; i++) {
-                total += Math.floor(Math.random() * sides) + 1;
+        if (typeof value === 'string') {
+            // If it looks like dice, roll with Foundry Roll for consistency
+            if (/^\d+d\d+(\s*[+\-]\s*\d+)?$/i.test(value.trim())) {
+                try {
+                    const roll = new Roll(value);
+                    roll.evaluate({ async: false });
+                    return roll.total || 0;
+                } catch (_) { /* ignore */ }
             }
-            return total;
+            const parsed = Number(value);
+            if (!Number.isNaN(parsed)) return parsed;
         }
         return 0;
     }
@@ -582,3 +600,9 @@ export class AbilitiesManager extends Application {
         dialog.render(true);
     }
 }
+
+// Expose to global for macros and sheet actions
+Hooks.once("ready", () => {
+  game.customTTRPG = game.customTTRPG || {};
+  game.customTTRPG.AbilitiesManager = AbilitiesManager;
+});

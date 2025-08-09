@@ -4,7 +4,7 @@ export class CompendiumManager extends Application {
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
             id: "compendium-manager",
-            template: "templates/applications/compendium-manager.html",
+            template: `systems/${game.system.id}/templates/applications/compendium-manager.html`,
             title: "Compendium Manager",
             width: 800,
             height: 600,
@@ -28,7 +28,7 @@ export class CompendiumManager extends Application {
 
     async loadCompendiumData() {
         try {
-            this.compendiumData = await CompendiumLoader.loadCompendium();
+            this.compendiumData = await CompendiumLoader.loadCompendiumData();
         } catch (error) {
             console.error("Failed to load compendium data:", error);
             this.compendiumData = {};
@@ -44,7 +44,7 @@ export class CompendiumManager extends Application {
             categories,
             currentCategory: this.currentCategory,
             currentSubcategory: this.currentSubcategory,
-            items: searchResults.length > 0 ? searchResults : items,
+            items: (searchResults && searchResults.length > 0) ? searchResults : items,
             searchTerm: this.searchTerm,
             filterRarity: this.filterRarity,
             filterLevel: this.filterLevel,
@@ -184,6 +184,7 @@ export class CompendiumManager extends Application {
 
     activateListeners(html) {
         super.activateListeners(html);
+        this.onRender();
         
         // Category navigation
         html.find('.category-nav').on('click', '.category-item', this._onCategorySelect.bind(this));
@@ -199,6 +200,23 @@ export class CompendiumManager extends Application {
         
         // Item interactions
         html.find('.item-card').on('click', this._onItemClick.bind(this));
+        // Allow dragging from compendium to sheet drop zone
+        html.find('.item-card').attr('draggable', 'true');
+        html.find('.item-card').on('dragstart', (e) => {
+            const id = e.currentTarget.dataset.itemId;
+            const item = this.findItemById(id);
+            if (!item) return;
+            const dt = e.originalEvent?.dataTransfer;
+            if (dt) {
+                dt.setData('text/plain', id);
+                dt.setData('application/json', JSON.stringify({ __cttType: 'item', item }));
+                dt.effectAllowed = 'copy';
+            }
+        });
+        html.find('.item-card').on('click', '.add-to-inventory', this._onAddToInventory.bind(this));
+        html.find('.item-card').on('click', '.add-to-spells', this._onAddToSpells.bind(this));
+        html.find('.item-card').on('click', '.add-to-abilities', this._onAddToAbilities.bind(this));
+        html.find('.item-card').on('click', '.copy-id', this._onCopyId.bind(this));
         
         // Export/Import buttons
         html.find('#export-compendium').on('click', this._onExport.bind(this));
@@ -241,7 +259,13 @@ export class CompendiumManager extends Application {
 
     _onItemClick(event) {
         event.preventDefault();
-        const itemId = event.currentTarget.dataset.itemId;
+        // If a nested action button was clicked, don't also open details
+        const target = event.target.closest('button');
+        if (target && (target.classList.contains('add-to-inventory') || target.classList.contains('add-to-spells') || target.classList.contains('add-to-abilities') || target.classList.contains('copy-id') || target.classList.contains('item-details-btn'))) {
+            return;
+        }
+        const card = event.currentTarget;
+        const itemId = card.dataset.itemId;
         this.showItemDetails(itemId);
     }
 
@@ -278,6 +302,13 @@ export class CompendiumManager extends Application {
             }
         }
         return null;
+    }
+
+    // Helper exposed for drop fallback
+    onRender() {
+        window.game = window.game || {};
+        window.game.customTTRPG = window.game.customTTRPG || {};
+        window.game.customTTRPG.__findCompendiumItemById = async (id) => this.findItemById(id);
     }
 
     renderItemDetails(item) {
@@ -355,6 +386,94 @@ export class CompendiumManager extends Application {
     addItemToCharacter(item) {
         // This would integrate with the character sheet system
         ui.notifications.info(`Added ${item.name} to character inventory`);
+    }
+
+    // Placeholder handlers
+    async _onAddToInventory(event) {
+        event.stopPropagation();
+        const itemId = event.currentTarget.dataset.itemId;
+        const item = this.findItemById(itemId);
+        if (!item) return;
+        const actor = game.user.character || canvas.tokens.controlled[0]?.actor;
+        if (!actor) { ui.notifications.warn('Select a character first.'); return; }
+        try {
+            const inv = foundry.utils.deepClone(actor.system.inventory || { weapons: [], armor: [], equipment: [], consumables: [], valuables: [] });
+            const category = item.type === 'weapon' ? 'weapons' : item.type === 'armor' ? 'armor' : item.type === 'consumable' ? 'consumables' : 'equipment';
+            const newItem = {
+                id: item.id || foundry.utils.randomID(),
+                name: item.name,
+                category,
+                quantity: 1,
+                weight: item.weight || 0,
+                value: item.cost || 0,
+                description: item.description || '',
+                type: item.type || 'equipment',
+                stats: item.stats || undefined,
+                equipped: false
+            };
+            inv[category] = inv[category] || [];
+            inv[category].push(newItem);
+            await actor.update({ 'system.inventory': inv });
+            ui.notifications.info(`Added ${item.name} to ${actor.name}'s inventory.`);
+        } catch (err) {
+            console.error(err);
+            ui.notifications.error('Failed to add to inventory.');
+        }
+    }
+    async _onAddToSpells(event) {
+        event.stopPropagation();
+        const itemId = event.currentTarget.dataset.itemId;
+        const item = this.findItemById(itemId);
+        if (!item) return;
+        const actor = game.user.character || canvas.tokens.controlled[0]?.actor;
+        if (!actor) { ui.notifications.warn('Select a character first.'); return; }
+        try {
+            const spells = Array.isArray(actor.system.availableSpells) ? [...actor.system.availableSpells] : [];
+            const spellName = item.name || item.id;
+            if (!spells.includes(spellName)) spells.push(spellName);
+            await actor.update({ 'system.availableSpells': spells });
+            ui.notifications.info(`Added ${item.name} to ${actor.name}'s spells.`);
+        } catch (err) {
+            console.error(err);
+            ui.notifications.error('Failed to add to spells.');
+        }
+    }
+    async _onAddToAbilities(event) {
+        event.stopPropagation();
+        const itemId = event.currentTarget.dataset.itemId;
+        const item = this.findItemById(itemId);
+        if (!item) return;
+        const actor = game.user.character || canvas.tokens.controlled[0]?.actor;
+        if (!actor) { ui.notifications.warn('Select a character first.'); return; }
+        try {
+            const abilities = Array.isArray(actor.system.abilities) ? [...actor.system.abilities] : [];
+            const ability = {
+                id: item.id || foundry.utils.randomID(),
+                name: item.name,
+                category: item.subcategory || item.category || 'utility',
+                type: item.type || 'ability',
+                description: item.description || '',
+                cost: item.costObj || undefined,
+                cooldown: Number(item.cooldown || 0) || undefined,
+                effects: item.effects || undefined
+            };
+            if (!abilities.find(a => a.id === ability.id)) abilities.push(ability);
+            await actor.update({ 'system.abilities': abilities });
+            ui.notifications.info(`Added ${item.name} to ${actor.name}'s abilities.`);
+        } catch (err) {
+            console.error(err);
+            ui.notifications.error('Failed to add to abilities.');
+        }
+    }
+    async _onCopyId(event) {
+        event.stopPropagation();
+        const itemId = event.currentTarget.dataset.itemId;
+        try {
+            await navigator.clipboard.writeText(itemId);
+            ui.notifications.info('Copied ID to clipboard');
+        } catch (_) {
+            ui.notifications.warn(`ID: ${itemId}`);
+        }
     }
 
     async _onExport() {

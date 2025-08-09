@@ -128,9 +128,23 @@
                                 </div>
                                 <div class="item-footer">
                                     <span class="item-category">{{capitalize category}} / {{capitalize subcategory}}</span>
-                                    <button class="item-details-btn">
-                                        <i class="fas fa-info-circle"></i> Details
-                                    </button>
+                                    <div class="item-actions">
+                                        <button class="cm-small-btn add-to-inventory" title="Add to Inventory" data-item-id="{{id}}">
+                                            <i class="fas fa-box"></i>
+                                        </button>
+                                        <button class="cm-small-btn add-to-spells" title="Add to Spells" data-item-id="{{id}}">
+                                            <i class="fas fa-magic"></i>
+                                        </button>
+                                        <button class="cm-small-btn add-to-abilities" title="Add to Abilities" data-item-id="{{id}}">
+                                            <i class="fas fa-bolt"></i>
+                                        </button>
+                                        <button class="cm-small-btn copy-id" title="Copy ID" data-item-id="{{id}}">
+                                            <i class="fas fa-clipboard"></i>
+                                        </button>
+                                        <button class="item-details-btn" data-item-id="{{id}}">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         {{/each}}
@@ -444,6 +458,21 @@
     font-size: 0.8rem;
     color: var(--color-text-secondary);
 }
+
+.item-actions { display: flex; gap: 0.25rem; align-items: center; }
+.cm-small-btn {
+    background: none;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.cm-small-btn:hover { color: var(--color-primary); border-color: var(--color-primary); }
 
 .item-details-btn {
     background: none;

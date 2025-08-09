@@ -89,12 +89,26 @@ export class SpellManager extends Application {
     
     // Cast spell button
     html.find('#cast-spell-btn').click(this._onCastSpell.bind(this));
+    html.find('#spell-macro-btn').click(this._onCreateMacro.bind(this));
     
     // Cancel button
     html.find('#cancel-cast-btn').click(this._onCancelCast.bind(this));
     
     // Resource management
     html.find('.resource-btn').click(this._onResourceChange.bind(this));
+  }
+
+  async _onCreateMacro(event) {
+    event.preventDefault();
+    if (!this.selectedSpell) return ui.notifications.warn('Select a spell first.');
+    const s = this.selectedSpell;
+    const name = `${this.actor.name}: ${s.name}`;
+    const cmd = `(() => { const a=game.actors.get("${this.actor.id}"); const mgr=new game.customTTRPG.SpellManager(a); mgr.selectedSpell=${JSON.stringify(s)}; mgr._onCastSpell(new Event('cast')); })();`;
+    let macro = game.macros?.find(m => m.name === name && m.command === cmd);
+    if (!macro) macro = await Macro.create({ name, type: 'script', scope: 'global', command: cmd, img: 'icons/svg/book.svg' });
+    const slot = game.user.getHotbarMacros().findIndex(m => !m) + 1 || 1;
+    await game.user.assignHotbarMacro(macro, slot);
+    ui.notifications.info(`Macro "${name}" added to slot ${slot}.`);
   }
 
   async _onSpellSelect(event) {

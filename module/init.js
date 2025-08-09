@@ -61,20 +61,20 @@ Hooks.once('init', async function() {
     
     // Load templates
     await loadTemplates([
-        'templates/actors/character-sheet.html',
-        'templates/partials/attribute-row.html',
-        'templates/partials/class-menu.html',
-        'templates/partials/spells-menu.html',
-        'templates/partials/inventory-menu.html',
-        'templates/partials/class-info-window.html',
-        'templates/partials/reset-settings.html',
-        'templates/applications/spell-manager.html',
-        'templates/applications/inventory-manager.html',
-        'templates/applications/combat-tracker.html',
-        'templates/applications/feat-manager.html',
-        'templates/applications/compendium-manager.html',
-        'templates/applications/equipment-manager.html',
-        'templates/applications/abilities-manager.html'
+        `systems/${game.system.id}/templates/actors/character-sheet.html`,
+        `systems/${game.system.id}/templates/partials/attribute-row.html`,
+        `systems/${game.system.id}/templates/partials/class-menu.html`,
+        `systems/${game.system.id}/templates/partials/spells-menu.html`,
+        `systems/${game.system.id}/templates/partials/inventory-menu.html`,
+        `systems/${game.system.id}/templates/partials/class-info-window.html`,
+        `systems/${game.system.id}/templates/partials/reset-settings.html`,
+        `systems/${game.system.id}/templates/applications/spell-manager.html`,
+        `systems/${game.system.id}/templates/applications/inventory-manager.html`,
+        `systems/${game.system.id}/templates/applications/combat-tracker.html`,
+        `systems/${game.system.id}/templates/applications/feat-manager.html`,
+        `systems/${game.system.id}/templates/applications/compendium-manager.html`,
+        `systems/${game.system.id}/templates/applications/equipment-manager.html`,
+        `systems/${game.system.id}/templates/applications/abilities-manager.html`
     ]);
 
     // Preload class information
@@ -82,7 +82,23 @@ Hooks.once('init', async function() {
 
     // Register document classes
     CONFIG.Actor.documentClass = CustomActor;
-    CONFIG.ActorSheet.documentClass = CharacterSheet;
+
+    // Register the character sheet for our Actor type
+    try {
+        // Unregister the core sheet to avoid duplicates
+        Actors.unregisterSheet('core', ActorSheet);
+    } catch (err) {
+        // Ignore if already unregistered
+    }
+    // Declare supported actor types and labels
+    CONFIG.Actor.typeLabels = {
+        character: 'Character'
+    };
+    Actors.registerSheet('custom-ttrpg', CharacterSheet, {
+        types: ['character'],
+        makeDefault: true,
+        label: 'Custom TTRPG Character Sheet'
+    });
 
     // Register applications
     CONFIG.CustomTTRPG = {
@@ -95,6 +111,16 @@ Hooks.once('init', async function() {
             EquipmentManager,
             AbilitiesManager,
             ResetSettingsApp
+        },
+        SetBonuses: {
+            "Warrior's Might": {
+                "2": { stats: { attack: 1 }, desc: "+1 Attack" },
+                "4": { stats: { attack: 2, defense: 1 }, desc: "+2 Attack, +1 Defense" }
+            },
+            "Arcanist Regalia": {
+                "2": { stats: { magic: 2 }, desc: "+2 Magic" },
+                "4": { stats: { magic: 3, mana: 5 }, desc: "+3 Magic, +5 Mana" }
+            }
         }
     };
 
@@ -103,13 +129,15 @@ Hooks.once('init', async function() {
 
 // Add buttons to Actor Directory
 Hooks.on('renderActorDirectory', function(app, html, data) {
-    const header = html.find('.directory-header');
+    const $html = $(html);
+    const header = $html.find('.directory-header');
     
     if (header.length) {
         const buttonContainer = $('<div class="custom-ttrpg-buttons"></div>');
         
         const buttons = [
-            { id: 'class-menu', label: 'Class Menu', icon: 'fas fa-users', hotkey: 'C' },
+            { id: 'open-my-sheet', label: 'My Sheet', icon: 'fas fa-id-badge', hotkey: 'C' },
+            { id: 'class-menu', label: 'Class Menu', icon: 'fas fa-users', hotkey: 'M' },
             { id: 'spells-menu', label: 'Spells Menu', icon: 'fas fa-magic', hotkey: 'S' },
             { id: 'inventory-menu', label: 'Inventory', icon: 'fas fa-bag-shopping', hotkey: 'I' },
             { id: 'equipment-manager', label: 'Equipment', icon: 'fas fa-shield-alt', hotkey: 'E' },
@@ -136,11 +164,15 @@ Hooks.on('renderActorDirectory', function(app, html, data) {
 
 // Handle button clicks
 Hooks.on('renderActorDirectory', function(app, html, data) {
-    html.on('click', '.custom-ttrpg-button', function(event) {
+    const $html = $(html);
+    $html.on('click', '.custom-ttrpg-button', function(event) {
         event.preventDefault();
         const action = $(this).data('action');
         
         switch (action) {
+            case 'open-my-sheet':
+                openMyCharacterSheet();
+                break;
             case 'class-menu':
                 openClassMenu();
                 break;
@@ -194,6 +226,10 @@ Hooks.once('ready', function() {
         switch (event.key.toLowerCase()) {
             case 'c':
                 event.preventDefault();
+                openMyCharacterSheet();
+                break;
+            case 'm':
+                event.preventDefault();
                 openClassMenu();
                 break;
             case 's':
@@ -232,6 +268,12 @@ Hooks.once('ready', function() {
     });
 
     console.log('Custom TTRPG System | Ready! Hotkeys registered.');
+    try {
+        const hasOwnedCharacter = game.actors.some(a => a.type === 'character' && a.isOwner);
+        if (!game.user.isGM && !hasOwnedCharacter) {
+            openClassMenu();
+        }
+    } catch (_) {}
 });
 
 // Function implementations
@@ -281,11 +323,25 @@ function openClassMenu() {
 }
 
 function openSpellsMenu() {
-    ui.notifications.info('Spells Menu - Coming Soon!');
+    const actors = game.actors.filter(a => a.type === 'character');
+    if (actors.length === 0) {
+        ui.notifications.warn('No characters found. Please create a character first.');
+        return;
+    }
+    const actor = actors[0];
+    const app = new SpellManager(actor);
+    app.render(true);
 }
 
 function openInventoryMenu() {
-    ui.notifications.info('Inventory Menu - Coming Soon!');
+    const actors = game.actors.filter(a => a.type === 'character');
+    if (actors.length === 0) {
+        ui.notifications.warn('No characters found. Please create a character first.');
+        return;
+    }
+    const actor = actors[0];
+    const app = new InventoryManager(actor);
+    app.render(true);
 }
 
 function openEquipmentManager() {
@@ -315,16 +371,37 @@ function openAbilitiesManager() {
 }
 
 function openFeatsMenu() {
-    ui.notifications.info('Feats Menu - Coming Soon!');
+    const actors = game.actors.filter(a => a.type === 'character');
+    if (actors.length === 0) {
+        ui.notifications.warn('No characters found. Please create a character first.');
+        return;
+    }
+    const actor = actors[0];
+    const app = new FeatManager(actor);
+    app.render(true);
 }
 
 function openCombatTracker() {
-    ui.notifications.info('Combat Tracker - Coming Soon!');
+    const app = new CombatTracker();
+    app.render(true);
 }
 
 function openCompendiumManager() {
     const compendiumManager = new CompendiumManager();
     compendiumManager.render(true);
+}
+
+function openMyCharacterSheet() {
+    let actor = game.user.character;
+    if (!actor) {
+        actor = game.actors.find(a => a.type === 'character' && a.isOwner) || null;
+    }
+    if (actor) {
+        actor.sheet?.render(true);
+    } else {
+        ui.notifications.warn('No character found. Please create a character.');
+        openClassMenu();
+    }
 }
 
 function chooseAndCreateClass() {
@@ -412,34 +489,36 @@ async function createActorWithClass(className) {
             return;
         }
 
+        const bs = classInfo.baseStats || {};
+        const initialHp = bs.Health || 10;
         const actorData = {
             name: `New ${className}`,
             type: 'character',
             system: {
                 class: className,
                 level: 1,
+                experience: 0,
                 attributes: {
-                    STR: classInfo.baseStats.STR || 10,
-                    DEX: classInfo.baseStats.DEX || 10,
-                    END: classInfo.baseStats.END || 10,
-                    WIS: classInfo.baseStats.WIS || 10,
-                    INT: classInfo.baseStats.INT || 10,
-                    CHA: classInfo.baseStats.CHA || 10,
-                    HP: {
-                        current: classInfo.baseStats.HP || 10,
-                        max: classInfo.baseStats.HP || 10
-                    },
-                    Crit: classInfo.baseStats.Crit || 20
+                    hp: { value: initialHp, max: initialHp },
+                    str: { value: bs.STR || 10, max: bs.STR || 10 },
+                    dex: { value: bs.DEX || 10, max: bs.DEX || 10 },
+                    end: { value: bs.END || 10, max: bs.END || 10 },
+                    wis: { value: bs.WIS || 10, max: bs.WIS || 10 },
+                    int: { value: bs.INT || 10, max: bs.INT || 10 },
+                    cha: { value: bs.CHA || 10, max: bs.CHA || 10 },
+                    crit: bs.CritRoll || 20
                 },
                 combat: {
-                    attack: 0,
-                    defense: 0,
-                    initiative: 0
+                    attackBonus: 0,
+                    defense: 10,
+                    damageBonus: 0,
+                    damageDice: bs.DamageDice || '1d4',
+                    utilityDice: bs.UtilityDice || '1d4'
                 },
                 notes: '',
                 resources: {},
-                features: [],
-                spells: [],
+                unlockedFeatures: [],
+                availableSpells: [],
                 inventory: [],
                 abilities: [],
                 equipment: {}

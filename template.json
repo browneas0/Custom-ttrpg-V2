@@ -1,0 +1,39 @@
+{
+  "Actor": {
+    "types": ["character"],
+    "character": {
+      "templates": [],
+      "system": {
+        "class": "Fighter",
+        "level": 1,
+        "attributes": {
+          "hp": { "value": 10, "max": 10 },
+          "str": { "value": 8, "max": 8 },
+          "dex": { "value": 8, "max": 8 },
+          "end": { "value": 8, "max": 8 },
+          "wis": { "value": 8, "max": 8 },
+          "int": { "value": 8, "max": 8 },
+          "cha": { "value": 8, "max": 8 },
+          "crit": 20
+        },
+        "combat": {
+          "attackBonus": 0,
+          "defense": 10,
+          "damageBonus": 0,
+          "damageDice": "1d4",
+          "utilityDice": "1d4"
+        },
+        "notes": "",
+        "resources": {},
+        "features": [],
+        "spells": [],
+        "inventory": [],
+        "abilities": [],
+        "equipment": {}
+      }
+    }
+  },
+  "Item": {
+    "types": []
+  }
+}
