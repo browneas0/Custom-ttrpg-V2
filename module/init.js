@@ -9,6 +9,7 @@ import { ResetSettingsApp } from './applications/reset-settings.js';
 import { CustomActor } from '../Actor/Actor.js';
 import { CharacterSheet } from './sheets/character-sheet.js';
 import { preloadClassInfo } from './class-loader.js';
+import { DiceEngine } from './rolls/engine.js';
 
 // Register Handlebars helpers
 Handlebars.registerHelper('eq', function(a, b) {
@@ -84,7 +85,7 @@ Hooks.once('init', async function() {
     CONFIG.Actor.documentClass = CustomActor;
     CONFIG.ActorSheet.documentClass = CharacterSheet;
 
-    // Register applications
+    // Register applications and systems
     CONFIG.CustomTTRPG = {
         applications: {
             CombatTracker,
@@ -95,8 +96,12 @@ Hooks.once('init', async function() {
             EquipmentManager,
             AbilitiesManager,
             ResetSettingsApp
-        }
+        },
+        DiceEngine
     };
+
+    // Make dice engine globally accessible
+    game.dice = DiceEngine;
 
     console.log('Custom TTRPG System | Initialized successfully!');
 });

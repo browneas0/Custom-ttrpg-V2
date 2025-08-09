@@ -1,6 +1,6 @@
 /**
- * Character Sheet for Custom TTRPG V2
- * Handles the character sheet interface and interactions
+ * Enhanced Character Sheet for Custom TTRPG V2
+ * Integrated with advanced dice engine and modern VTT patterns
  */
 
 export class CharacterSheet extends ActorSheet {
@@ -8,9 +8,11 @@ export class CharacterSheet extends ActorSheet {
     return mergeObject(super.defaultOptions, {
       classes: ["custom-ttrpg", "sheet", "actor"],
       template: `systems/${game.system.id}/templates/actors/character-sheet.html`,
-      width: 800,
-      height: 600,
-      tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "attributes" }]
+      width: 900,
+      height: 700,
+      tabs: [{ navSelector: ".sheet-tabs", contentSelector: ".sheet-body", initial: "attributes" }],
+      dragDrop: [{ dragSelector: ".item", dropSelector: null }],
+      resizable: true
     });
   }
 
@@ -41,8 +43,46 @@ export class CharacterSheet extends ActorSheet {
     if (classInfo?.spells) {
       data.spells = classInfo.spells;
     }
-    
+
+    // Calculate attribute modifiers for display
+    data.attributeModifiers = {};
+    const attributes = ['str', 'dex', 'end', 'int', 'wis', 'cha'];
+    attributes.forEach(attr => {
+      const value = actorData.attributes?.[attr]?.value || 10;
+      data.attributeModifiers[attr] = Math.floor((value - 10) / 2);
+    });
+
+    // Add skills data if available
+    data.skills = actorData.skills || {};
+
+    // Add inventory with categories
+    data.inventory = actorData.inventory || {};
+    data.equippedItems = this._getEquippedItems(actorData.inventory);
+
+    // Add carrying capacity info
+    data.carryingInfo = {
+      current: actorData.currentWeight || 0,
+      max: actorData.carryingCapacity || 150,
+      percentage: actorData.carryingCapacity ? 
+        Math.round((actorData.currentWeight || 0) / actorData.carryingCapacity * 100) : 0
+    };
+
+    // Add health percentage for visual bars
+    data.healthPercentage = actorData.attributes?.hp?.max ? 
+      Math.round((actorData.attributes.hp.value / actorData.attributes.hp.max) * 100) : 100;
+
     return data;
+  }
+
+  _getEquippedItems(inventory) {
+    const equipped = { weapons: [], armor: [] };
+    if (inventory?.weapons) {
+      equipped.weapons = inventory.weapons.filter(item => item.equipped);
+    }
+    if (inventory?.armor) {
+      equipped.armor = inventory.armor.filter(item => item.equipped);
+    }
+    return equipped;
   }
 
   activateListeners(html) {
@@ -56,6 +96,35 @@ export class CharacterSheet extends ActorSheet {
     
     // Level up button
     html.find('.level-up').click(this._onLevelUp.bind(this));
+
+    // Attribute roll buttons
+    html.find('.attribute-roll').click(this._onAttributeRoll.bind(this));
+
+    // Skill check buttons
+    html.find('.skill-roll').click(this._onSkillRoll.bind(this));
+
+    // Attack roll buttons
+    html.find('.attack-roll').click(this._onAttackRoll.bind(this));
+
+    // Damage roll buttons
+    html.find('.damage-roll').click(this._onDamageRoll.bind(this));
+
+    // Item management
+    html.find('.item-equip').click(this._onItemEquip.bind(this));
+    html.find('.item-delete').click(this._onItemDelete.bind(this));
+
+    // Health management
+    html.find('.health-change').click(this._onHealthChange.bind(this));
+
+    // Initiative roll
+    html.find('.initiative-roll').click(this._onInitiativeRoll.bind(this));
+
+    // Quick dice roller
+    html.find('.quick-roll').click(this._onQuickRoll.bind(this));
+
+    // Rest buttons
+    html.find('.short-rest').click(this._onShortRest.bind(this));
+    html.find('.long-rest').click(this._onLongRest.bind(this));
   }
 
   async _onShowClassInfo(event) {
