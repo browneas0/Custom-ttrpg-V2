@@ -393,8 +393,8 @@ export class SettingsManager {
     switch (settingKey) {
       case 'dice.enableVisualEffects':
         // Toggle visual effects system
-        if (game.effects) {
-          game.effects.enabled = newValue;
+        if (game.customTTRPG?.effects) {
+          game.customTTRPG.effects.enabled = newValue;
         }
         break;
 
@@ -418,8 +418,8 @@ export class SettingsManager {
 
       case 'automation.chatCommands':
         // Enable/disable chat command processing
-        if (game.chatCommands) {
-          game.chatCommands.enabled = newValue;
+        if (game.customTTRPG?.chatCommands) {
+          game.customTTRPG.chatCommands.enabled = newValue;
         }
         break;
     }

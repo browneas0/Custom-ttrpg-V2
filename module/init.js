@@ -116,14 +116,16 @@ Hooks.once('init', async function() {
         ResourceTracker
     };
 
-    // Make systems globally accessible
-    game.dice = DiceEngine;
-    game.effects = EffectsManager;
-    game.settings = SettingsManager;
-    game.tokens = TokenManager;
-    game.chatCommands = ChatCommands;
-    game.automation = AutomationEngine;
-    game.resources = ResourceTracker;
+    // Make systems accessible under a safe namespace to avoid clobbering Foundry globals
+    game.customTTRPG = {
+        dice: DiceEngine,
+        effects: EffectsManager,
+        settings: SettingsManager,
+        tokens: TokenManager,
+        chatCommands: ChatCommands,
+        automation: AutomationEngine,
+        resources: ResourceTracker
+    };
 
     console.log('Custom TTRPG System | Initialized successfully!');
 });
@@ -131,7 +133,7 @@ Hooks.once('init', async function() {
 // Bridge: Connect rest events to resource tracker
 Hooks.on('shortRest', async function(actor) {
     try {
-        if (game.resources?.processRest) await game.resources.processRest(actor, 'shortRest');
+        if (game.customTTRPG?.resources?.processRest) await game.customTTRPG.resources.processRest(actor, 'shortRest');
     } catch (e) {
         console.warn('shortRest hook failed:', e);
     }
@@ -139,7 +141,7 @@ Hooks.on('shortRest', async function(actor) {
 
 Hooks.on('longRest', async function(actor) {
     try {
-        if (game.resources?.processRest) await game.resources.processRest(actor, 'longRest');
+        if (game.customTTRPG?.resources?.processRest) await game.customTTRPG.resources.processRest(actor, 'longRest');
     } catch (e) {
         console.warn('longRest hook failed:', e);
     }
@@ -149,14 +151,14 @@ Hooks.on('longRest', async function(actor) {
 Hooks.on('createChatMessage', function(message) {
     try {
         // EffectsManager already listens; this is a safe relay if needed later
-        if (game.automation?.processTrigger && message?.isRoll) {
+        if (game.customTTRPG?.automation?.processTrigger && message?.isRoll) {
             // Relay critical/fumble triggers if they didn't fire from native hook
             const rolls = message.rolls || [];
             const isD20 = rolls.some(r => r.dice?.some(d => d.faces === 20));
             if (isD20) {
                 // Let engine decide via its own conditions
-                game.automation.processTrigger('dice.critical', { message });
-                game.automation.processTrigger('dice.fumble', { message });
+                game.customTTRPG.automation.processTrigger('dice.critical', { message });
+                game.customTTRPG.automation.processTrigger('dice.fumble', { message });
             }
         }
     } catch (e) {
@@ -189,8 +191,8 @@ Hooks.on('updateActor', async function(actor, updateData) {
         const changedLevel = updateData?.system?.level !== undefined || updateData?.system?.progression?.level !== undefined;
         if (!changedClass && !changedLevel) return;
 
-        if (!game.resources?.initializeActorResources) return;
-        const newTemplate = game.resources.initializeActorResources(actor);
+        if (!game.customTTRPG?.resources?.initializeActorResources) return;
+        const newTemplate = game.customTTRPG.resources.initializeActorResources(actor);
         const current = actor.system?.resources || {};
 
         const merged = mergeResources(current, newTemplate);

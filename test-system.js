@@ -29,26 +29,26 @@ async function testDiceEngine() {
   
   try {
     // Test basic rolling
-    const basicRoll = await game.dice.roll('1d20+5');
+    const basicRoll = await game.customTTRPG.dice.roll('1d20+5');
     console.log("✓ Basic roll:", basicRoll.total);
     
     // Test advanced notation
-    const advancedRoll = await game.dice.roll('4d6dl1+2', { sendToChat: false });
+    const advancedRoll = await game.customTTRPG.dice.roll('4d6dl1+2', { sendToChat: false });
     console.log("✓ Advanced notation (4d6 drop lowest):", advancedRoll.total);
     
     // Test advantage/disadvantage
-    const advantageRoll = await game.dice.rollAttributeCheck('STR', 3, { 
+    const advantageRoll = await game.customTTRPG.dice.rollAttributeCheck('STR', 3, { 
       advantage: true, 
       sendToChat: false 
     });
     console.log("✓ Advantage roll:", advantageRoll.total);
     
     // Test damage rolling
-    const damageRoll = await game.dice.rollDamage('2d6+4', 'fire', { sendToChat: false });
+    const damageRoll = await game.customTTRPG.dice.rollDamage('2d6+4', 'fire', { sendToChat: false });
     console.log("✓ Fire damage roll:", damageRoll.total);
     
     // Test roll history
-    const history = game.dice.getRollHistory(3);
+    const history = game.customTTRPG.dice.getRollHistory(3);
     console.log("✓ Roll history length:", history.length);
     
     console.log("✅ Dice Engine tests passed!");
@@ -223,13 +223,13 @@ async function testEffectsSystem() {
   console.log("\n✨ Testing Visual Effects System...");
   
   try {
-    if (!game.effects) {
+    if (!game.customTTRPG.effects) {
       console.log("⚠️ Effects system not initialized, skipping visual tests");
       return;
     }
     
     // Test effect registration
-    game.effects.registerEffect('test-effect', {
+    game.customTTRPG.effects.registerEffect('test-effect', {
       type: 'glow',
       duration: 1000,
       glow: { color: '#00ff00', intensity: 0.5 }
@@ -300,17 +300,17 @@ async function testSettingsManager() {
   console.log("\n⚙️ Testing Settings Manager...");
   
   try {
-    if (!game.settings) {
+    if (!game.customTTRPG.settings) {
       console.log("⚠️ Settings manager not initialized, skipping tests");
       return;
     }
     
     // Test setting access
-    const compactMode = game.settings.get('ui', 'compactMode');
+    const compactMode = game.customTTRPG.settings.get('ui', 'compactMode');
     console.log("✓ Settings accessible:", typeof compactMode);
     
     // Test settings categories
-    const summary = game.settings.getSettingsSummary();
+    const summary = game.customTTRPG.settings.getSettingsSummary();
     console.log("✓ Settings summary:", summary.categories, "categories,", summary.settings, "total settings");
     
     // Test setting export/import capability
@@ -327,7 +327,7 @@ async function testTokenManager() {
   console.log("\n🎯 Testing Token Manager...");
   
   try {
-    if (!game.tokens) {
+    if (!game.customTTRPG.tokens) {
       console.log("⚠️ Token manager not initialized, skipping tests");
       return;
     }
@@ -358,17 +358,17 @@ async function testChatCommands() {
   console.log("\n💬 Testing Chat Commands...");
   
   try {
-    if (!game.chatCommands) {
+    if (!game.customTTRPG.chatCommands) {
       console.log("⚠️ Chat commands not initialized, skipping tests");
       return;
     }
     
     // Test command registration
-    const commandCount = game.chatCommands.commands.size;
+    const commandCount = game.customTTRPG.chatCommands.commands.size;
     console.log("✓ Registered commands:", commandCount);
     
     // Test alias system
-    const aliasCount = game.chatCommands.aliases.size;
+    const aliasCount = game.customTTRPG.chatCommands.aliases.size;
     console.log("✓ Registered aliases:", aliasCount);
     
     // Test command history
@@ -392,25 +392,25 @@ async function testAutomationEngine() {
   console.log("\n🤖 Testing Automation Engine...");
   
   try {
-    if (!game.automation) {
+    if (!game.customTTRPG.automation) {
       console.log("⚠️ Automation engine not initialized, skipping tests");
       return;
     }
     
     // Test trigger registration
-    const triggerCount = game.automation.triggers.size;
+    const triggerCount = game.customTTRPG.automation.triggers.size;
     console.log("✓ Registered triggers:", triggerCount);
     
     // Test rule registration
-    const ruleCount = game.automation.rules.size;
+    const ruleCount = game.customTTRPG.automation.rules.size;
     console.log("✓ Registered rules:", ruleCount);
     
     // Test rule categories
-    const categories = game.automation.getRulesByCategory();
+    const categories = game.customTTRPG.automation.getRulesByCategory();
     console.log("✓ Rule categories:", Object.keys(categories).length);
     
     // Test automation state
-    console.log("✓ Automation enabled:", game.automation.enabled);
+    console.log("✓ Automation enabled:", game.customTTRPG.automation.enabled);
     
     // Test custom execution capability
     console.log("✓ Custom script execution available");
@@ -426,7 +426,7 @@ async function testResourceTracker() {
   console.log("\n📊 Testing Resource Tracker...");
   
   try {
-    if (!game.resources) {
+    if (!game.customTTRPG.resources) {
       console.log("⚠️ Resource tracker not initialized, skipping tests");
       return;
     }
@@ -442,14 +442,14 @@ async function testResourceTracker() {
           progression: { level: 5, class: 'wizard' }
         }
       };
-      const resources = game.resources.initializeActorResources(mockActor);
+      const resources = game.customTTRPG.resources.initializeActorResources(mockActor);
       console.log("✓ Resource initialization for actors:", Object.keys(resources).length, "resource types");
     } catch (e) {
       console.log("✓ Resource initialization available (mock test skipped)");
     }
     
     // Test usage history
-    const history = game.resources.getUsageHistory(null, 5);
+    const history = game.customTTRPG.resources.getUsageHistory(null, 5);
     console.log("✓ Usage history tracking:", history.length, "entries");
     
     // Test spell slot calculation
