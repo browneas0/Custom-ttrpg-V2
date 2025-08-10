@@ -399,7 +399,7 @@ export class AutomationEngine {
    * Roll death saving throw
    */
   static async rollDeathSave(actor) {
-    const result = await game.dice.roll('1d20', {
+    const result = await game.customTTRPG.dice.roll('1d20', {
       speaker: { alias: actor.name },
       flavor: 'Death Saving Throw'
     });

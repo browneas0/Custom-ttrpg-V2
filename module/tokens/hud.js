@@ -964,7 +964,7 @@ export class TokenManager {
     if (requiresAttack) {
       const attackBonus = originToken.actor?.system?.combat?.attackBonus || 0;
       for (const target of targets) {
-        const roll = await game.dice.roll(`1d20+${attackBonus}`, {
+        const roll = await game.customTTRPG.dice.roll(`1d20+${attackBonus}`, {
           flavor: `${originToken.name} Attack Roll`,
           speaker: ChatMessage.getSpeaker({ token: originToken })
         });
@@ -1004,10 +1004,10 @@ export class TokenManager {
     // Fallbacks: damage or healing fields directly on item
     if (item.damage) {
       const damageType = item.damageType || 'physical';
-      const roll = await game.dice.roll(String(item.damage), { flavor: `${item.name || item.id} damage` });
+      const roll = await game.customTTRPG.dice.roll(String(item.damage), { flavor: `${item.name || item.id} damage` });
       for (const t of targets) await t.actor?.takeDamage(roll.total || 0, damageType);
     } else if (item.healing) {
-      const roll = isNaN(Number(item.healing)) ? await game.dice.roll(String(item.healing), { flavor: `${item.name || item.id} healing` }) : { total: Number(item.healing) };
+      const roll = isNaN(Number(item.healing)) ? await game.customTTRPG.dice.roll(String(item.healing), { flavor: `${item.name || item.id} healing` }) : { total: Number(item.healing) };
       for (const t of targets) await t.actor?.heal(roll.total || 0);
     }
   }
@@ -1023,12 +1023,12 @@ export class TokenManager {
       switch (effect.type) {
         case 'damage': {
           const dmgType = effect.damageType || 'physical';
-          const roll = await game.dice.roll(String(effect.value), { flavor: `${originToken.name} deals ${dmgType}` });
+          const roll = await game.customTTRPG.dice.roll(String(effect.value), { flavor: `${originToken.name} deals ${dmgType}` });
           for (const t of targets) await t.actor?.takeDamage(roll.total || 0, dmgType);
           break;
         }
         case 'heal': {
-          const roll = isNaN(Number(effect.value)) ? await game.dice.roll(String(effect.value), { flavor: `${originToken.name} heals` }) : { total: Number(effect.value) };
+          const roll = isNaN(Number(effect.value)) ? await game.customTTRPG.dice.roll(String(effect.value), { flavor: `${originToken.name} heals` }) : { total: Number(effect.value) };
           for (const t of targets) await t.actor?.heal(roll.total || 0);
           break;
         }

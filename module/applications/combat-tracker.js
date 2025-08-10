@@ -569,7 +569,7 @@ export class CombatTracker extends Application {
 
   async _rollInitiative() {
     for (const combatant of this.combatants) {
-      const result = await game.dice.roll(`1d20+${combatant.initiativeBonus}`, {
+      const result = await game.customTTRPG.dice.roll(`1d20+${combatant.initiativeBonus}`, {
         flavor: `${combatant.name} Initiative`,
         sendToChat: false
       });
@@ -675,7 +675,7 @@ export class CombatTracker extends Application {
       expression += (attackBonus >= 0 ? '+' : '') + attackBonus;
     }
 
-    const result = await game.dice.roll(expression, {
+    const result = await game.customTTRPG.dice.roll(expression, {
       flavor: `${combatant.name} Attack Roll`,
       speaker: { alias: combatant.name }
     });
@@ -688,7 +688,7 @@ export class CombatTracker extends Application {
     const combatant = this.combatants.find(c => c.id === combatantId);
     if (!combatant) return;
 
-    const result = await game.dice.rollDamage(damageExpression, damageType, {
+    const result = await game.customTTRPG.dice.rollDamage(damageExpression, damageType, {
       speaker: { alias: combatant.name }
     });
 
@@ -746,7 +746,7 @@ export class CombatTracker extends Application {
       expression += (attributeBonus >= 0 ? '+' : '') + attributeBonus;
     }
 
-    const result = await game.dice.roll(expression, {
+    const result = await game.customTTRPG.dice.roll(expression, {
       flavor: `${combatant.name} ${attribute.toUpperCase()} Save (DC ${dc})`,
       speaker: { alias: combatant.name }
     });
@@ -769,7 +769,7 @@ export class CombatTracker extends Application {
     const combatants = this.combatants.filter(c => combatantIds.includes(c.id));
     
     for (const combatant of combatants) {
-      const result = await game.dice.roll(`1d20+${combatant.initiativeBonus}`, {
+      const result = await game.customTTRPG.dice.roll(`1d20+${combatant.initiativeBonus}`, {
         flavor: `${combatant.name} Initiative`,
         sendToChat: false
       });

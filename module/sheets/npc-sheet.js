@@ -57,7 +57,7 @@ export class NPCSheet extends ActorSheet {
   async _onAttack(event) {
     event.preventDefault();
     const attackBonus = this.actor.system?.combat?.attackBonus || 0;
-    await game.dice.roll(`1d20+${attackBonus}`, {
+    await game.customTTRPG.dice.roll(`1d20+${attackBonus}`, {
       flavor: `${this.actor.name} Attack`,
       speaker: ChatMessage.getSpeaker({ actor: this.actor })
     });

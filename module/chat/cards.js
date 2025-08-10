@@ -38,7 +38,7 @@ export class ChatCommands {
         if (options.flags.includes('advantage')) rollOptions.advantage = true;
         if (options.flags.includes('disadvantage')) rollOptions.disadvantage = true;
 
-        const result = await game.dice.roll(expression, rollOptions);
+        const result = await game.customTTRPG.dice.roll(expression, rollOptions);
         return `Rolled ${expression}: **${result.total}**`;
       }
     });
@@ -55,7 +55,7 @@ export class ChatCommands {
           return "Usage: /damage <expression> [type]";
         }
 
-        const result = await game.dice.rollDamage(expression, damageType, { 
+        const result = await game.customTTRPG.dice.rollDamage(expression, damageType, { 
           speaker: options.speaker 
         });
 
@@ -80,7 +80,7 @@ export class ChatCommands {
           return "Usage: /heal <expression>";
         }
 
-        const result = await game.dice.roll(expression, { 
+        const result = await game.customTTRPG.dice.roll(expression, { 
           speaker: options.speaker,
           flavor: 'Healing'
         });
@@ -116,7 +116,7 @@ export class ChatCommands {
         }
 
         const bonus = actor.getSkillBonus(attribute) || actor.getAttributeModifier(attribute);
-        const result = await game.dice.roll(`1d20+${bonus}`, {
+        const result = await game.customTTRPG.dice.roll(`1d20+${bonus}`, {
           speaker: options.speaker,
           flavor: `${attribute.toUpperCase()} Save (DC ${dc})`
         });
@@ -153,7 +153,7 @@ export class ChatCommands {
           expression = `2d20kl1+${bonus}`;
         }
 
-        const result = await game.dice.roll(expression, {
+        const result = await game.customTTRPG.dice.roll(expression, {
           speaker: options.speaker,
           flavor: `${skill.charAt(0).toUpperCase() + skill.slice(1)} Check`
         });
@@ -177,7 +177,7 @@ export class ChatCommands {
           totalBonus += actor.getAttributeModifier('dex');
         }
 
-        const result = await game.dice.roll(`1d20+${totalBonus}`, {
+        const result = await game.customTTRPG.dice.roll(`1d20+${totalBonus}`, {
           speaker: options.speaker,
           flavor: 'Initiative'
         });

@@ -214,7 +214,7 @@ export class CharacterSheet extends ActorSheet {
     const attribute = event.currentTarget.dataset.attribute;
     const modifier = this.actor.getAttributeModifier(attribute);
     
-    await game.dice.rollAttributeCheck(attribute.toUpperCase(), modifier, {
+    await game.customTTRPG.dice.rollAttributeCheck(attribute.toUpperCase(), modifier, {
       speaker: ChatMessage.getSpeaker({ actor: this.actor })
     });
   }
@@ -224,7 +224,7 @@ export class CharacterSheet extends ActorSheet {
     const skill = event.currentTarget.dataset.skill;
     const bonus = this.actor.getSkillBonus(skill);
     
-    await game.dice.roll(`1d20+${bonus}`, {
+    await game.customTTRPG.dice.roll(`1d20+${bonus}`, {
       flavor: `${skill.charAt(0).toUpperCase() + skill.slice(1)} Check`,
       speaker: ChatMessage.getSpeaker({ actor: this.actor })
     });
@@ -235,7 +235,7 @@ export class CharacterSheet extends ActorSheet {
     const weapon = event.currentTarget.dataset.weapon;
     const attackBonus = this.actor.system.combat.attackBonus || 0;
     
-    await game.dice.roll(`1d20+${attackBonus}`, {
+    await game.customTTRPG.dice.roll(`1d20+${attackBonus}`, {
       flavor: `${weapon || 'Weapon'} Attack`,
       speaker: ChatMessage.getSpeaker({ actor: this.actor })
     });
@@ -246,7 +246,7 @@ export class CharacterSheet extends ActorSheet {
     const damageExpression = event.currentTarget.dataset.damage || '1d6';
     const damageType = event.currentTarget.dataset.damageType || 'physical';
     
-    await game.dice.rollDamage(damageExpression, damageType, {
+    await game.customTTRPG.dice.rollDamage(damageExpression, damageType, {
       speaker: ChatMessage.getSpeaker({ actor: this.actor })
     });
   }
@@ -292,7 +292,7 @@ export class CharacterSheet extends ActorSheet {
     const initiativeBonus = this.actor.system.combat.initiative || 0;
     const totalBonus = dexModifier + initiativeBonus;
     
-    await game.dice.roll(`1d20+${totalBonus}`, {
+    await game.customTTRPG.dice.roll(`1d20+${totalBonus}`, {
       flavor: 'Initiative',
       speaker: ChatMessage.getSpeaker({ actor: this.actor })
     });
@@ -305,7 +305,7 @@ export class CharacterSheet extends ActorSheet {
     const attribute = this._attributeLabelToKey(label);
     if (!attribute) return;
     const modifier = this.actor.getAttributeModifier(attribute);
-    await game.dice.rollAttributeCheck(attribute.toUpperCase(), modifier, {
+    await game.customTTRPG.dice.rollAttributeCheck(attribute.toUpperCase(), modifier, {
       speaker: ChatMessage.getSpeaker({ actor: this.actor })
     });
   }
@@ -374,7 +374,7 @@ export class CharacterSheet extends ActorSheet {
     const expression = event.currentTarget.dataset.roll;
     const flavor = event.currentTarget.dataset.flavor || '';
     
-    await game.dice.roll(expression, {
+    await game.customTTRPG.dice.roll(expression, {
       flavor: flavor,
       speaker: ChatMessage.getSpeaker({ actor: this.actor })
     });
