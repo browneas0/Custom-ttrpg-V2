@@ -204,12 +204,19 @@ export class CombatTracker extends Application {
     
     if (!this.isActive || this.combatants.length === 0) return;
     
+    // Process end of turn effects for current combatant
+    await this._processEndOfTurnEffects();
+    
     this.currentTurn = (this.currentTurn + 1) % this.combatants.length;
     
     // If we've completed a full round
     if (this.currentTurn === 0) {
       this.round++;
+      await this._processRoundEnd();
     }
+    
+    // Process start of turn effects for new combatant
+    await this._processStartOfTurnEffects();
     
     const currentCombatant = this.combatants[this.currentTurn];
     this.render(true);
@@ -562,8 +569,12 @@ export class CombatTracker extends Application {
 
   async _rollInitiative() {
     for (const combatant of this.combatants) {
-      const roll = Math.floor(Math.random() * 20) + 1;
-      combatant.initiative = roll + combatant.initiativeBonus;
+      const result = await game.dice.roll(`1d20+${combatant.initiativeBonus}`, {
+        flavor: `${combatant.name} Initiative`,
+        sendToChat: false
+      });
+      combatant.initiative = result.total;
+      combatant.initiativeRoll = result;
     }
   }
 
@@ -574,6 +585,201 @@ export class CombatTracker extends Application {
         return roundsElapsed < status.duration;
       });
     }
+  }
+
+  async _processEndOfTurnEffects() {
+    if (this.combatants.length === 0) return;
+    
+    const currentCombatant = this.combatants[this.currentTurn];
+    if (!currentCombatant) return;
+
+    // Process damage over time effects
+    for (const effect of currentCombatant.statusEffects) {
+      if (effect.name === 'poisoned' && effect.damagePerTurn) {
+        currentCombatant.currentHp = Math.max(0, currentCombatant.currentHp - effect.damagePerTurn);
+        ui.notifications.warn(`${currentCombatant.name} takes ${effect.damagePerTurn} poison damage!`);
+      }
+    }
+
+    // Regeneration effects
+    if (currentCombatant.regeneration) {
+      const healAmount = currentCombatant.regeneration;
+      currentCombatant.currentHp = Math.min(currentCombatant.maxHp, currentCombatant.currentHp + healAmount);
+      ui.notifications.info(`${currentCombatant.name} regenerates ${healAmount} HP!`);
+    }
+  }
+
+  async _processStartOfTurnEffects() {
+    if (this.combatants.length === 0) return;
+    
+    const currentCombatant = this.combatants[this.currentTurn];
+    if (!currentCombatant) return;
+
+    // Check for incapacitating effects
+    const incapacitatingEffects = ['stunned', 'paralyzed', 'unconscious'];
+    const hasIncapacitatingEffect = currentCombatant.statusEffects.some(effect => 
+      incapacitatingEffects.includes(effect.name)
+    );
+
+    if (hasIncapacitatingEffect) {
+      ui.notifications.warn(`${currentCombatant.name} is incapacitated and loses their turn!`);
+      // Auto-skip turn if incapacitated
+      setTimeout(() => this._onNextTurn({ preventDefault: () => {} }), 1500);
+    }
+
+    // Apply ongoing beneficial effects
+    for (const effect of currentCombatant.statusEffects) {
+      if (effect.name === 'blessed' && effect.bonus) {
+        ui.notifications.info(`${currentCombatant.name} has +${effect.bonus} to rolls this turn!`);
+      }
+    }
+  }
+
+  async _processRoundEnd() {
+    // Update all status effects
+    this._updateStatusEffects();
+    
+    // Check for combat end conditions
+    const activeCombatants = this.combatants.filter(c => c.currentHp > 0);
+    const playerTypes = activeCombatants.filter(c => c.type === 'player');
+    const enemyTypes = activeCombatants.filter(c => c.type === 'enemy');
+    
+    if (playerTypes.length === 0) {
+      ui.notifications.error("All players are down! Combat continues...");
+    } else if (enemyTypes.length === 0) {
+      ui.notifications.info("All enemies defeated! Consider ending combat.");
+    }
+
+    // Apply round-based effects
+    for (const combatant of this.combatants) {
+      // Concentration checks for spell casters
+      if (combatant.concentrating) {
+        ui.notifications.info(`${combatant.name} must maintain concentration...`);
+      }
+    }
+  }
+
+  // Enhanced attack rolling with modifiers
+  async rollAttack(combatantId, attackBonus = 0, advantage = false, disadvantage = false) {
+    const combatant = this.combatants.find(c => c.id === combatantId);
+    if (!combatant) return;
+
+    let expression = '1d20';
+    if (advantage && !disadvantage) {
+      expression = '2d20kh1';
+    } else if (disadvantage && !advantage) {
+      expression = '2d20kl1';
+    }
+
+    if (attackBonus !== 0) {
+      expression += (attackBonus >= 0 ? '+' : '') + attackBonus;
+    }
+
+    const result = await game.dice.roll(expression, {
+      flavor: `${combatant.name} Attack Roll`,
+      speaker: { alias: combatant.name }
+    });
+
+    return result;
+  }
+
+  // Enhanced damage rolling
+  async rollDamage(combatantId, damageExpression, damageType = 'physical') {
+    const combatant = this.combatants.find(c => c.id === combatantId);
+    if (!combatant) return;
+
+    const result = await game.dice.rollDamage(damageExpression, damageType, {
+      speaker: { alias: combatant.name }
+    });
+
+    return result;
+  }
+
+  // Apply damage with resistance/vulnerability calculations
+  async applyDamage(combatantId, damage, damageType = 'physical') {
+    const combatant = this.combatants.find(c => c.id === combatantId);
+    if (!combatant) return;
+
+    let finalDamage = damage;
+
+    // Apply resistances/vulnerabilities (simplified)
+    if (combatant.resistances?.includes(damageType)) {
+      finalDamage = Math.floor(damage / 2);
+      ui.notifications.info(`${combatant.name} resists ${damageType} damage!`);
+    } else if (combatant.vulnerabilities?.includes(damageType)) {
+      finalDamage = damage * 2;
+      ui.notifications.warn(`${combatant.name} is vulnerable to ${damageType} damage!`);
+    }
+
+    combatant.currentHp = Math.max(0, combatant.currentHp - finalDamage);
+    
+    if (combatant.currentHp <= 0) {
+      ui.notifications.warn(`${combatant.name} is unconscious!`);
+      // Add unconscious status effect
+      combatant.statusEffects.push({
+        name: 'unconscious',
+        duration: 999,
+        appliedRound: this.round
+      });
+    }
+
+    this.render(true);
+    return finalDamage;
+  }
+
+  // Automated saving throw
+  async rollSavingThrow(combatantId, attribute, dc, advantage = false, disadvantage = false) {
+    const combatant = this.combatants.find(c => c.id === combatantId);
+    if (!combatant) return;
+
+    // Simple attribute bonus calculation (would be more complex in real implementation)
+    const attributeBonus = Math.floor((combatant[attribute] || 10 - 10) / 2);
+    
+    let expression = '1d20';
+    if (advantage && !disadvantage) {
+      expression = '2d20kh1';
+    } else if (disadvantage && !advantage) {
+      expression = '2d20kl1';
+    }
+
+    if (attributeBonus !== 0) {
+      expression += (attributeBonus >= 0 ? '+' : '') + attributeBonus;
+    }
+
+    const result = await game.dice.roll(expression, {
+      flavor: `${combatant.name} ${attribute.toUpperCase()} Save (DC ${dc})`,
+      speaker: { alias: combatant.name }
+    });
+
+    const success = result.total >= dc;
+    
+    setTimeout(() => {
+      if (success) {
+        ui.notifications.info(`${combatant.name} succeeds the saving throw!`);
+      } else {
+        ui.notifications.warn(`${combatant.name} fails the saving throw!`);
+      }
+    }, 1000);
+
+    return { result: result.total, success: success };
+  }
+
+  // Bulk initiative rolling for NPCs
+  async rollBulkInitiative(combatantIds) {
+    const combatants = this.combatants.filter(c => combatantIds.includes(c.id));
+    
+    for (const combatant of combatants) {
+      const result = await game.dice.roll(`1d20+${combatant.initiativeBonus}`, {
+        flavor: `${combatant.name} Initiative`,
+        sendToChat: false
+      });
+      combatant.initiative = result.total;
+      combatant.initiativeRoll = result;
+    }
+
+    // Re-sort by initiative
+    this.combatants.sort((a, b) => b.initiative - a.initiative);
+    this.render(true);
   }
 }
 

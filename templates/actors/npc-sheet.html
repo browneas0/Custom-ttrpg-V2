@@ -1,0 +1,55 @@
+<form class="npc-sheet">
+  <header class="sheet-header">
+    <h1 class="charname">{{actor.name}}</h1>
+    <div class="summary">
+      <span>Type: NPC</span>
+    </div>
+  </header>
+
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="stats">Stats</a>
+    <a class="item" data-tab="equipment">Equipment</a>
+  </nav>
+
+  <section class="sheet-body">
+    <div class="tab stats" data-group="primary" data-tab="stats">
+      <div class="center-stats">
+        <div class="stat-grid">
+          {{#each system.attributes as |val key|}}
+            <div class="stat">
+              <div class="label">{{key}}</div>
+              <div class="value">{{val}}</div>
+            </div>
+          {{/each}}
+        </div>
+      </div>
+      <div class="combat-row">
+        <div>AC: {{system.combat.ac}}</div>
+        <div>Attack: {{system.combat.attackBonus}}</div>
+        <button type="button" data-action="roll-attack">Roll Attack</button>
+      </div>
+    </div>
+
+    <div class="tab equipment" data-group="primary" data-tab="equipment">
+      <div class="loot-slots">
+        <div class="slot">
+          <div class="slot-label">Main Hand</div>
+          <div class="slot-value">{{#if slots.weaponMain}}{{slots.weaponMain.id}}{{else}}Empty{{/if}}</div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Off Hand</div>
+          <div class="slot-value">{{#if slots.weaponOff}}{{slots.weaponOff.id}}{{else}}Empty{{/if}}</div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Armor</div>
+          <div class="slot-value">{{#if slots.armor}}{{slots.armor.id}}{{else}}Empty{{/if}}</div>
+        </div>
+        <div class="slot">
+          <div class="slot-label">Accessory</div>
+          <div class="slot-value">{{#if slots.accessory}}{{slots.accessory.id}}{{else}}Empty{{/if}}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</form>
+

@@ -1,222 +1,491 @@
 /**
- * Custom Actor class for Custom TTRPG V2
- * Handles character data and calculations
+ * Custom Actor Document for Custom TTRPG V2
+ * Enhanced with modern patterns from VTT research
  */
 
 export class CustomActor extends Actor {
-  static get type() {
-    // Declare the supported document type for clarity (Foundry uses schema);
-    // we'll ensure registration allows 'character' in init.js
-    return this.documentName;
+  /** @override */
+  prepareData() {
+    super.prepareData();
+    this.prepareBaseData();
+    this.prepareDerivedData();
   }
+
+  /** @override */
   prepareBaseData() {
-    super.prepareBaseData();
+    const actorData = this.system;
     
-    // Initialize system data if it doesn't exist
-    if (!this.system) {
-      this.system = {};
+    // Initialize default structure if needed
+    if (!actorData.attributes) {
+      actorData.attributes = this._getDefaultAttributes();
     }
     
-    // Set default values
-    const system = this.system;
-    system.class = system.class || "Fighter";
-    system.level = system.level || 1;
-    system.experience = system.experience || 0;
-    
-    // Initialize attributes if they don't exist
-    if (!system.attributes) {
-      system.attributes = {
-        hp: { value: 10, max: 10 },
-        str: { value: 8, max: 8 },
-        dex: { value: 8, max: 8 },
-        end: { value: 8, max: 8 },
-        wis: { value: 8, max: 8 },
-        int: { value: 8, max: 8 },
-        cha: { value: 8, max: 8 },
-        crit: 20
-      };
+    if (!actorData.inventory) {
+      actorData.inventory = this._getDefaultInventory();
     }
     
-    // Initialize combat stats if they don't exist
-    if (!system.combat) {
-      system.combat = {
-        attackBonus: 0,
-        defense: 10,
-        damageBonus: 0,
-        damageDice: "1d4",
-        utilityDice: "1d4"
-      };
+    if (!actorData.combat) {
+      actorData.combat = this._getDefaultCombat();
     }
-    
-    // Initialize other system data
-    system.notes = system.notes || "";
-    system.resources = system.resources || {};
-    system.unlockedFeatures = system.unlockedFeatures || [];
-    system.availableSpells = system.availableSpells || [];
-    system.feats = system.feats || [];
-    system.preferences = system.preferences || { equipmentPreferred: {} };
 
-    // Initialize equipment structure and bonuses
-    system.equipment = system.equipment || {
-      head: null, chest: null, legs: null, feet: null,
-      ring1: null, ring2: null, trinket1: null, magicItem: null,
-      mainHand: null, offHand: null, ranged: null
-    };
-    system.equipmentBonuses = system.equipmentBonuses || {
-      attack: 0, defense: 0, magic: 0, health: 0, mana: 0, stamina: 0,
-      critChance: 0, critDamage: 0, dodge: 0, block: 0
-    };
+    if (!actorData.resources) {
+      actorData.resources = this._getDefaultResources();
+    }
+
+    if (!actorData.progression) {
+      actorData.progression = this._getDefaultProgression();
+    }
   }
 
+  /** @override */
   prepareDerivedData() {
-    super.prepareDerivedData();
+    const actorData = this.system;
     
-    const system = this.system;
-    const classInfo = CONFIG.CustomTTRPG?.ClassInfo?.[system.class];
-    
-    if (classInfo) {
-      // Calculate derived stats based on class and attributes
-      this._calculateDerivedStats(classInfo);
-      
-      // Initialize resources based on class
-      this._initializeClassResources(classInfo);
-    }
-
-    // Recalculate equipment bonuses and apply to combat/attributes (additive for now)
-    this._recalculateEquipmentBonuses();
-
-    // Apply feat bonuses after equipment
-    this._applyFeatBonuses();
+    // Calculate derived attributes
+    this._calculateHealthPool(actorData);
+    this._calculateDefenses(actorData);
+    this._calculateMovement(actorData);
+    this._calculateCarryingCapacity(actorData);
+    this._calculateSkillBonuses(actorData);
+    this._applyClassFeatures(actorData);
+    this._applyEquipmentBonuses(actorData);
+    this._applyEquipmentSpellSlots(actorData);
   }
 
-  _applyFeatBonuses() {
-    const system = this.system;
-    const feats = Array.isArray(system.feats) ? system.feats : [];
-    const bonuses = { attack: 0, defense: 0, damage: 0 };
-    for (const feat of feats) {
-      // Only apply enabled feats (default enabled when flag absent)
-      if (feat && feat.enabled === false) continue;
-      const benefits = feat?.benefits || [];
-      for (const benefit of benefits) {
-        const text = String(benefit || '').toLowerCase();
-        const numMatch = text.match(/([+\-]?\d+)/);
-        const val = numMatch ? Number(numMatch[1]) : 0;
-        if (text.includes('attack')) bonuses.attack += val;
-        if (text.includes('ac') || text.includes('defense')) bonuses.defense += val;
-        if (text.includes('damage')) bonuses.damage += val;
-      }
-    }
-    system.featBonuses = bonuses;
-    // Apply to combat
-    system.combat.attackBonus = (system.combat.attackBonus || 0) + (bonuses.attack || 0);
-    system.combat.defense = (system.combat.defense || 0) + (bonuses.defense || 0);
-    system.combat.damageBonus = (system.combat.damageBonus || 0) + (bonuses.damage || 0);
-  }
-
-  _recalculateEquipmentBonuses() {
-    const system = this.system;
-    const bonuses = {
-      attack: 0, defense: 0, magic: 0, health: 0, mana: 0, stamina: 0,
-      critChance: 0, critDamage: 0, dodge: 0, block: 0
+  /**
+   * Default attribute structure
+   */
+  _getDefaultAttributes() {
+    return {
+      hp: { value: 20, max: 20, temp: 0 },
+      str: { value: 10, max: 20, modifier: 0 },
+      dex: { value: 10, max: 20, modifier: 0 },
+      end: { value: 10, max: 20, modifier: 0 },
+      int: { value: 10, max: 20, modifier: 0 },
+      wis: { value: 10, max: 20, modifier: 0 },
+      cha: { value: 10, max: 20, modifier: 0 },
+      crit: 20
     };
-    const equip = system.equipment || {};
-    const setCounts = {};
-    const applyStats = (stats) => {
-      if (!stats) return;
-      for (const [k, v] of Object.entries(stats)) {
-        if (bonuses.hasOwnProperty(k)) bonuses[k] += Number(v) || 0;
-      }
-    };
-    Object.values(equip).forEach(slot => {
-      if (slot?.set) {
-        const key = String(slot.set);
-        setCounts[key] = (setCounts[key] || 0) + 1;
-      }
-      applyStats(slot?.stats);
-    });
-    // Apply set bonus definitions if present
-    const setDefs = (CONFIG.CustomTTRPG && CONFIG.CustomTTRPG.SetBonuses) ? CONFIG.CustomTTRPG.SetBonuses : {};
-    for (const [setName, count] of Object.entries(setCounts)) {
-      const defs = setDefs[setName] || {};
-      for (const [thresholdStr, def] of Object.entries(defs)) {
-        const threshold = Number(thresholdStr);
-        const stats = def?.stats ?? def;
-        if (count >= threshold) applyStats(stats);
-      }
-    }
-    system.equipmentBonuses = bonuses;
-    system.setCounts = setCounts;
-
-    // Apply simple effects: base values plus equipment bonuses
-    const baseAttack = system.combat.attackBonus || 0;
-    const baseDefense = system.combat.defense || 0;
-    system.combat.attackBonus = baseAttack + (bonuses.attack || 0);
-    system.combat.defense = baseDefense + (bonuses.defense || 0);
-    // Also scale damage bonus a bit from equipment attack
-    system.combat.damageBonus = (system.combat.damageBonus || 0) + Math.max(0, bonuses.attack || 0);
-    // Health bonus increases max HP; clamp current value
-    const hp = system.attributes?.hp;
-    if (hp) {
-      hp.max = (hp.max || 0) + (bonuses.health || 0);
-      if (hp.value > hp.max) hp.value = hp.max;
-    }
   }
 
-  _calculateDerivedStats(classInfo) {
-    const system = this.system;
-    const attributes = system.attributes;
+  /**
+   * Default inventory structure
+   */
+  _getDefaultInventory() {
+    return {
+      weapons: [],
+      armor: [],
+      equipment: [],
+      consumables: [],
+      valuables: [],
+      currency: { gold: 0, silver: 0, copper: 0 }
+    };
+  }
+
+  /**
+   * Default combat stats
+   */
+  _getDefaultCombat() {
+    return {
+      ac: 10,
+      attackBonus: 0,
+      damageBonus: 0,
+      initiative: 0,
+      speed: 30,
+      proficiencyBonus: 2
+    };
+  }
+
+  /**
+   * Default resources (mana, stamina, etc.)
+   */
+  _getDefaultResources() {
+    return {
+      mana: { value: 0, max: 0 },
+      stamina: { value: 0, max: 0 },
+      focus: { value: 0, max: 0 }
+    };
+  }
+
+  /**
+   * Default progression data
+   */
+  _getDefaultProgression() {
+    return {
+      level: 1,
+      experience: 0,
+      experienceToNext: 1000,
+      class: '',
+      subclass: '',
+      classFeatures: [],
+      proficiencies: {
+        weapons: [],
+        armor: [],
+        skills: [],
+        languages: [],
+        tools: []
+      }
+    };
+  }
+
+  /**
+   * Calculate health pool based on class and endurance
+   */
+  _calculateHealthPool(actorData) {
+    const level = actorData.progression?.level || 1;
+    const endurance = actorData.attributes.end.value || 10;
+    const endModifier = Math.floor((endurance - 10) / 2);
     
-    // Calculate HP multiplier from settings
-    const hpMultiplier = game.settings.get("custom-ttrpg", "hpMultiplier") || 2;
+    // Base HP calculation (can be overridden by class features)
+    const baseHP = 10 + endModifier;
+    const levelHP = (level - 1) * (6 + endModifier);
     
-    // Calculate max HP based on class and END
-    const baseHealth = classInfo.baseStats?.Health || 10;
-    const endBonus = Math.floor((attributes.end.value - 10) / 2) * hpMultiplier;
-    attributes.hp.max = Math.max(1, baseHealth + endBonus);
+    actorData.attributes.hp.max = Math.max(1, baseHP + levelHP);
     
     // Ensure current HP doesn't exceed max
-    if (attributes.hp.value > attributes.hp.max) {
-      attributes.hp.value = attributes.hp.max;
-    }
-    
-    // Calculate combat stats
-    const strBonus = Math.floor((attributes.str.value - 10) / 2);
-    const dexBonus = Math.floor((attributes.dex.value - 10) / 2);
-    
-    system.combat.attackBonus = strBonus + Math.floor(system.level / 2);
-    system.combat.defense = 10 + dexBonus + Math.floor(system.level / 3);
-    system.combat.damageBonus = strBonus;
-    
-    // Set damage dice from class
-    if (classInfo.baseStats?.DamageDice) {
-      system.combat.damageDice = classInfo.baseStats.DamageDice;
-    }
-    
-    if (classInfo.baseStats?.UtilityDice) {
-      system.combat.utilityDice = classInfo.baseStats.UtilityDice;
-    }
-    
-    // Set crit roll from class
-    if (classInfo.baseStats?.CritRoll) {
-      attributes.crit = classInfo.baseStats.CritRoll;
+    if (actorData.attributes.hp.value > actorData.attributes.hp.max) {
+      actorData.attributes.hp.value = actorData.attributes.hp.max;
     }
   }
 
-  _initializeClassResources(classInfo) {
-    const system = this.system;
+  /**
+   * Calculate armor class and other defenses
+   */
+  _calculateDefenses(actorData) {
+    const dexModifier = Math.floor((actorData.attributes.dex.value - 10) / 2);
     
-    // Initialize resources based on class
-    if (classInfo.resources) {
-      for (const [resourceName, resourceData] of Object.entries(classInfo.resources)) {
-        if (!system.resources[resourceName]) {
-          system.resources[resourceName] = {
-            description: resourceData.description,
-            value: resourceData.value,
-            max: resourceData.max,
-            color: resourceData.color
-          };
+    // Base AC (10 + Dex modifier)
+    let ac = 10 + dexModifier;
+    
+    // Add armor bonuses from equipped items
+    const equippedArmor = actorData.inventory.armor?.filter(item => item.equipped) || [];
+    equippedArmor.forEach(armor => {
+      if (armor.acBonus) ac += armor.acBonus;
+    });
+    
+    actorData.combat.ac = ac;
+  }
+
+  /**
+   * Apply equipment-based bonuses to combat stats (attack/damage)
+   */
+  _applyEquipmentBonuses(actorData) {
+    const weapons = actorData.inventory.weapons?.filter(w => w.equipped) || [];
+    const strMod = Math.floor(((actorData.attributes.str?.value ?? 10) - 10) / 2);
+    const dexMod = Math.floor(((actorData.attributes.dex?.value ?? 10) - 10) / 2);
+
+    let bestAttack = actorData.combat.attackBonus || 0;
+    let bestDamage = actorData.combat.damageBonus || 0;
+
+    for (const weapon of weapons) {
+      const isRanged = (weapon.category || '').toLowerCase() === 'ranged' || weapon.properties?.includes('thrown');
+      const finesse = weapon.properties?.includes('finesse');
+      const attrMod = finesse ? Math.max(strMod, dexMod) : (isRanged ? dexMod : strMod);
+
+      const proficiency = this.isProficientWith(weapon.name || weapon.id, 'weapons') ? (actorData.combat.proficiencyBonus || 0) : 0;
+      const weaponAttack = (weapon.attackBonus || 0) + attrMod + proficiency;
+      const weaponDamage = (weapon.damageBonus || 0) + attrMod;
+
+      if (weaponAttack > bestAttack) bestAttack = weaponAttack;
+      if (weaponDamage > bestDamage) bestDamage = weaponDamage;
+    }
+
+    actorData.combat.attackBonus = bestAttack;
+    actorData.combat.damageBonus = bestDamage;
+  }
+
+  /**
+   * Apply equipment-based spell slot bonuses to resources.spellSlots
+   */
+  _applyEquipmentSpellSlots(actorData) {
+    const resources = actorData.resources || {};
+    const spellSlots = resources.spellSlots;
+    if (!spellSlots || !spellSlots.slots) return;
+
+    // Aggregate bonuses from equipped items exposing spellSlotsBonus: { level:number, bonus:number }[] or object map
+    const equippedItems = [];
+    Object.entries(actorData.inventory).forEach(([category, list]) => {
+      if (!Array.isArray(list)) return;
+      for (const item of list) {
+        if (item?.equipped) equippedItems.push(item);
+      }
+    });
+
+    const bonuses = {};
+    for (const item of equippedItems) {
+      const bonus = item.spellSlotsBonus;
+      if (!bonus) continue;
+      if (Array.isArray(bonus)) {
+        for (const entry of bonus) {
+          const lvl = String(entry.level);
+          bonuses[lvl] = (bonuses[lvl] || 0) + (entry.bonus || 0);
+        }
+      } else if (typeof bonus === 'object') {
+        for (const [lvl, amount] of Object.entries(bonus)) {
+          bonuses[String(lvl)] = (bonuses[String(lvl)] || 0) + (Number(amount) || 0);
         }
       }
     }
+
+    // Apply bonuses to max, clamp value to new max
+    Object.entries(bonuses).forEach(([lvl, add]) => {
+      const slot = spellSlots.slots[lvl];
+      if (!slot) return;
+      slot.max = (slot.max || 0) + add;
+      slot.value = Math.min(slot.value, slot.max);
+    });
+  }
+
+  /**
+   * Calculate movement speed
+   */
+  _calculateMovement(actorData) {
+    // Base speed is 30, modified by equipment and effects
+    let speed = 30;
+    
+    // Apply armor penalties if any
+    const equippedArmor = actorData.inventory.armor?.filter(item => item.equipped) || [];
+    equippedArmor.forEach(armor => {
+      if (armor.speedPenalty) speed -= armor.speedPenalty;
+    });
+    
+    actorData.combat.speed = Math.max(0, speed);
+  }
+
+  /**
+   * Calculate carrying capacity
+   */
+  _calculateCarryingCapacity(actorData) {
+    const strength = actorData.attributes.str.value || 10;
+    actorData.carryingCapacity = strength * 15; // 15 lbs per STR point
+    
+    // Calculate current weight
+    let currentWeight = 0;
+    Object.values(actorData.inventory).forEach(category => {
+      if (Array.isArray(category)) {
+        category.forEach(item => {
+          currentWeight += (item.weight || 0) * (item.quantity || 1);
+        });
+      }
+    });
+    actorData.currentWeight = currentWeight;
+  }
+
+  /**
+   * Calculate skill bonuses based on attributes
+   */
+  _calculateSkillBonuses(actorData) {
+    const attributes = actorData.attributes;
+    const profBonus = actorData.combat.proficiencyBonus || 2;
+    
+    // Define skill-to-attribute mapping
+    const skillAttributes = {
+      acrobatics: 'dex',
+      athletics: 'str',
+      deception: 'cha',
+      history: 'int',
+      insight: 'wis',
+      intimidation: 'cha',
+      investigation: 'int',
+      medicine: 'wis',
+      nature: 'int',
+      perception: 'wis',
+      performance: 'cha',
+      persuasion: 'cha',
+      religion: 'int',
+      sleightOfHand: 'dex',
+      stealth: 'dex',
+      survival: 'wis'
+    };
+    
+    if (!actorData.skills) actorData.skills = {};
+    
+    Object.entries(skillAttributes).forEach(([skill, attr]) => {
+      const attrValue = attributes[attr]?.value || 10;
+      const modifier = Math.floor((attrValue - 10) / 2);
+      const isProficient = actorData.progression?.proficiencies?.skills?.includes(skill) || false;
+      
+      actorData.skills[skill] = {
+        modifier: modifier,
+        proficient: isProficient,
+        bonus: modifier + (isProficient ? profBonus : 0)
+      };
+    });
+  }
+
+  /**
+   * Apply class-specific features and bonuses
+   */
+  _applyClassFeatures(actorData) {
+    const className = actorData.progression?.class;
+    const level = actorData.progression?.level || 1;
+    
+    if (!className) return;
+    
+    // Apply proficiency bonus based on level
+    actorData.combat.proficiencyBonus = Math.ceil(level / 4) + 1;
+    
+    // Class-specific calculations can be added here
+    // This would typically load from class data files
+  }
+
+  /**
+   * Enhanced attribute modifier calculation
+   */
+  getAttributeModifier(attribute) {
+    const value = this.system.attributes[attribute]?.value || 10;
+    return Math.floor((value - 10) / 2);
+  }
+
+  /**
+   * Get skill bonus including proficiency
+   */
+  getSkillBonus(skill) {
+    return this.system.skills?.[skill]?.bonus || 0;
+  }
+
+  /**
+   * Check if actor is proficient with a weapon/armor/tool
+   */
+  isProficientWith(item, type = 'weapons') {
+    const proficiencies = this.system.progression?.proficiencies?.[type] || [];
+    return proficiencies.includes(item.toLowerCase());
+  }
+
+  /**
+   * Add item to inventory
+   */
+  async addToInventory(itemData, category = 'equipment') {
+    const updateData = {};
+    const inventory = foundry.utils.deepClone(this.system.inventory);
+    
+    if (!inventory[category]) inventory[category] = [];
+    
+    // Generate unique ID if not provided
+    if (!itemData.id) {
+      itemData.id = foundry.utils.randomID();
+    }
+    
+    inventory[category].push(itemData);
+    updateData[`system.inventory`] = inventory;
+    
+    return await this.update(updateData);
+  }
+
+  /**
+   * Remove item from inventory
+   */
+  async removeFromInventory(itemId) {
+    const updateData = {};
+    const inventory = foundry.utils.deepClone(this.system.inventory);
+    
+    // Find and remove item from all categories
+    Object.keys(inventory).forEach(category => {
+      if (Array.isArray(inventory[category])) {
+        inventory[category] = inventory[category].filter(item => item.id !== itemId);
+      }
+    });
+    
+    updateData[`system.inventory`] = inventory;
+    return await this.update(updateData);
+  }
+
+  /**
+   * Equip/unequip item
+   */
+  async toggleEquipped(itemId, category) {
+    const updateData = {};
+    const inventory = foundry.utils.deepClone(this.system.inventory);
+    
+    const item = inventory[category]?.find(i => i.id === itemId);
+    if (item) {
+      item.equipped = !item.equipped;
+      updateData[`system.inventory`] = inventory;
+      
+      await this.update(updateData);
+      
+      // Recalculate derived data after equipment change
+      this.prepareDerivedData();
+    }
+  }
+
+  /**
+   * Apply damage with type resistance/vulnerability
+   */
+  async takeDamage(amount, damageType = 'physical') {
+    const currentHP = this.system.attributes.hp.value;
+    const newHP = Math.max(0, currentHP - amount);
+    
+    await this.update({
+      'system.attributes.hp.value': newHP
+    });
+    
+    // Check for unconsciousness
+    if (newHP <= 0) {
+      ui.notifications.warn(`${this.name} is unconscious!`);
+    }
+    
+    return newHP;
+  }
+
+  /**
+   * Heal damage
+   */
+  async heal(amount) {
+    const currentHP = this.system.attributes.hp.value;
+    const maxHP = this.system.attributes.hp.max;
+    const newHP = Math.min(maxHP, currentHP + amount);
+    
+    await this.update({
+      'system.attributes.hp.value': newHP
+    });
+    
+    return newHP;
+  }
+
+  /**
+   * Long rest - restore resources
+   */
+  async longRest() {
+    const updateData = {
+      'system.attributes.hp.value': this.system.attributes.hp.max
+    };
+    
+    // Restore all resources to max
+    if (this.system.resources.mana) {
+      updateData['system.resources.mana.value'] = this.system.resources.mana.max;
+    }
+    if (this.system.resources.stamina) {
+      updateData['system.resources.stamina.value'] = this.system.resources.stamina.max;
+    }
+    if (this.system.resources.focus) {
+      updateData['system.resources.focus.value'] = this.system.resources.focus.max;
+    }
+    
+    await this.update(updateData);
+    ui.notifications.info(`${this.name} completes a long rest and recovers fully!`);
+  }
+
+  /**
+   * Level up the character
+   */
+  async levelUp() {
+    const currentLevel = this.system.progression.level;
+    const newLevel = currentLevel + 1;
+    
+    if (newLevel > 20) {
+      ui.notifications.warn("Maximum level reached!");
+      return;
+    }
+    
+    const updateData = {
+      'system.progression.level': newLevel,
+      'system.progression.experience': 0
+    };
+    
+    await this.update(updateData);
+    
+    // Trigger level up dialog or automation
+    ui.notifications.info(`${this.name} reaches level ${newLevel}!`);
   }
 }

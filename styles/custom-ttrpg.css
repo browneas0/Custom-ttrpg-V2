@@ -884,6 +884,71 @@ input:focus, textarea:focus, select:focus {
     font-size: 0.85em;
 }
 
+/* NPC Sheet */
+.npc .npc-sheet .sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+}
+
+.npc .center-stats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.npc .stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+
+.npc .stat {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.npc .stat .label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.npc .stat .value {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.npc .combat-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.npc .loot-slots {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.npc .slot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.npc .slot-label { font-weight: 600; }
+.npc .slot-value { opacity: 0.9; }
+
 /* Equipment Manager Styles */
 .equipment-manager {
     display: flex;
