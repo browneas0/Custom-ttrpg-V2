@@ -48,25 +48,25 @@
             <div class="category-nav">
                 <h3>Categories</h3>
                 {{#each categories}}
-                    <div class="category-item {{#if (eq @key ../currentCategory)}}active{{/if}}" 
-                         data-category="{{@key}}">
+                    <div class="category-item {{#if (eq id ../currentCategory)}}active{{/if}}" 
+                         data-category="{{id}}">
                         <div class="category-header">
                             <span class="category-name">{{name}}</span>
-                            <span class="category-count">{{add (sum subcategories.count) 0}}</span>
+                            <span class="category-count">{{count}}</span>
                         </div>
-                        {{#if subcategories}}
-                            <div class="subcategory-nav">
-                                {{#each subcategories}}
-                                    <div class="subcategory-item {{#if (and (eq @../key ../../currentCategory) (eq @key ../../currentSubcategory))}}active{{/if}}"
-                                         data-subcategory="{{@key}}">
-                                        <span class="subcategory-name">{{name}}</span>
-                                        <span class="subcategory-count">({{count}})</span>
-                                    </div>
-                                {{/each}}
-                            </div>
-                        {{/if}}
                     </div>
                 {{/each}}
+                {{#if subcategories}}
+                    <div class="subcategory-nav">
+                        {{#each subcategories}}
+                            <div class="subcategory-item {{#if (and (eq id ../../currentCategory) (eq id ../../currentSubcategory))}}active{{/if}}"
+                                 data-subcategory="{{id}}">
+                                <span class="subcategory-name">{{name}}</span>
+                                <span class="subcategory-count">({{count}})</span>
+                            </div>
+                        {{/each}}
+                    </div>
+                {{/if}}
             </div>
         </div>
 
@@ -392,13 +392,24 @@
     border-radius: 12px;
     font-size: 0.8rem;
     font-weight: 500;
+    border: 1px solid transparent;
 }
 
-.rarity-common { background: #6c757d; color: white; }
-.rarity-uncommon { background: #28a745; color: white; }
-.rarity-rare { background: #007bff; color: white; }
-.rarity-very_rare { background: #6f42c1; color: white; }
-.rarity-legendary { background: #fd7e14; color: white; }
+/* New rarity palette */
+.rarity-simple {
+    background: rgba(255,255,255,0.08);
+    color: var(--color-text-primary);
+    border-color: rgba(255,255,255,0.25);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.rarity-common { background: #ffffff; color: #222; border-color: #e0e0e0; }
+.rarity-un-common, .rarity-uncommon { background: #28a745; color: #ffffff; }
+.rarity-rare { background: #007bff; color: #ffffff; }
+.rarity-epic, .rarity-very_rare, .rarity-very-rare { background: #6f42c1; color: #ffffff; }
+.rarity-mythic { background: #dc3545; color: #ffffff; }
+.rarity-legendary { background: #f1c40f; color: #000000; }
 
 .item-content {
     margin-bottom: 1rem;

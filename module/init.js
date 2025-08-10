@@ -8,6 +8,7 @@ import { AbilitiesManager } from './applications/abilities-manager.js';
 import { ResetSettingsApp } from './applications/reset-settings.js';
 import { CustomActor } from '../Actor/Actor.js';
 import { CharacterSheet } from './sheets/character-sheet.js';
+import { NPCSheet } from './sheets/npc-sheet.js';
 import { preloadClassInfo } from './class-loader.js';
 import { DiceEngine } from './rolls/engine.js';
 import { EffectsManager } from './effects/apply.js';
@@ -89,7 +90,10 @@ Hooks.once('init', async function() {
 
     // Register document classes
     CONFIG.Actor.documentClass = CustomActor;
-    CONFIG.ActorSheet.documentClass = CharacterSheet;
+    // Register sheets per type
+    Actors.unregisterSheet('core', ActorSheet);
+    Actors.registerSheet('custom-ttrpg', CharacterSheet, { types: ['character'], makeDefault: true });
+    Actors.registerSheet('custom-ttrpg', NPCSheet, { types: ['npc'], makeDefault: true });
 
     // Register applications and systems
     CONFIG.CustomTTRPG = {
@@ -123,6 +127,109 @@ Hooks.once('init', async function() {
 
     console.log('Custom TTRPG System | Initialized successfully!');
 });
+
+// Bridge: Connect rest events to resource tracker
+Hooks.on('shortRest', async function(actor) {
+    try {
+        if (game.resources?.processRest) await game.resources.processRest(actor, 'shortRest');
+    } catch (e) {
+        console.warn('shortRest hook failed:', e);
+    }
+});
+
+Hooks.on('longRest', async function(actor) {
+    try {
+        if (game.resources?.processRest) await game.resources.processRest(actor, 'longRest');
+    } catch (e) {
+        console.warn('longRest hook failed:', e);
+    }
+});
+
+// Bridge: On createChatMessage, allow automation and effects to react (redundant-safe)
+Hooks.on('createChatMessage', function(message) {
+    try {
+        // EffectsManager already listens; this is a safe relay if needed later
+        if (game.automation?.processTrigger && message?.isRoll) {
+            // Relay critical/fumble triggers if they didn't fire from native hook
+            const rolls = message.rolls || [];
+            const isD20 = rolls.some(r => r.dice?.some(d => d.faces === 20));
+            if (isD20) {
+                // Let engine decide via its own conditions
+                game.automation.processTrigger('dice.critical', { message });
+                game.automation.processTrigger('dice.fumble', { message });
+            }
+        }
+    } catch (e) {
+        console.warn('createChatMessage bridge failed:', e);
+    }
+});
+
+// Bridge: Initialize character resources on creation
+Hooks.on('createActor', async function(actor, options, userId) {
+    try {
+        if (actor?.type !== 'character') return;
+        const sys = actor.system || {};
+
+        // Ensure base structures exist (CustomActor also guards this)
+        const needsResources = !sys.resources || Object.keys(sys.resources).length === 0;
+        if (needsResources && game.resources?.initializeActorResources) {
+            const initialized = game.resources.initializeActorResources(actor);
+            await actor.update({ 'system.resources': initialized });
+        }
+    } catch (e) {
+        console.warn('createActor hook failed:', e);
+    }
+});
+
+// Bridge: Recalculate resources when class/level changes, preserving current usage when possible
+Hooks.on('updateActor', async function(actor, updateData) {
+    try {
+        if (actor?.type !== 'character') return;
+        const changedClass = updateData?.system?.class !== undefined;
+        const changedLevel = updateData?.system?.level !== undefined || updateData?.system?.progression?.level !== undefined;
+        if (!changedClass && !changedLevel) return;
+
+        if (!game.resources?.initializeActorResources) return;
+        const newTemplate = game.resources.initializeActorResources(actor);
+        const current = actor.system?.resources || {};
+
+        const merged = mergeResources(current, newTemplate);
+        await actor.update({ 'system.resources': merged });
+    } catch (e) {
+        console.warn('updateActor hook failed:', e);
+    }
+});
+
+function mergeResources(current, template) {
+    // Preserve current values where keys match; cap to new max
+    const out = foundry.utils.deepClone(template);
+    for (const [key, tmpl] of Object.entries(template)) {
+        const cur = current[key];
+        if (!cur) continue;
+        if (tmpl.slots && cur.slots) {
+            for (const lvl of Object.keys(tmpl.slots)) {
+                if (cur.slots[lvl]) {
+                    out[key].slots[lvl].value = Math.min(out[key].slots[lvl].max, cur.slots[lvl].value);
+                }
+            }
+        } else if (tmpl.abilities && cur.abilities) {
+            for (const a of Object.keys(tmpl.abilities)) {
+                if (cur.abilities[a]) {
+                    out[key].abilities[a].value = Math.min(out[key].abilities[a].max, cur.abilities[a].value);
+                }
+            }
+        } else if (tmpl.types && cur.types) {
+            for (const t of Object.keys(tmpl.types)) {
+                if (cur.types[t]) {
+                    out[key].types[t].value = Math.min(out[key].types[t].max, cur.types[t].value);
+                }
+            }
+        } else if (typeof tmpl.value === 'number' && typeof cur.value === 'number') {
+            out[key].value = Math.min(out[key].max ?? tmpl.max ?? cur.max ?? 0, cur.value);
+        }
+    }
+    return out;
+}
 
 // Add buttons to Actor Directory
 Hooks.on('renderActorDirectory', function(app, html, data) {

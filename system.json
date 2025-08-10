@@ -34,7 +34,7 @@
   ],
   "documentTypes": {
     "Actor": {
-      "types": ["character"]
+      "types": ["character", "npc"]
     }
   }
 }

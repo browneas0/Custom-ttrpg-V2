@@ -16,167 +16,50 @@ export class CompendiumManager extends Application {
 
     constructor(options = {}) {
         super(options);
-        this.compendiumData = null;
         this.currentCategory = 'items';
-        this.currentSubcategory = 'weapons';
+        this.currentSubcategory = null;
         this.searchTerm = '';
         this.filterRarity = 'all';
         this.filterLevel = 'all';
         this.filterType = 'all';
-        this.loadCompendiumData();
     }
 
-    async loadCompendiumData() {
-        try {
-            this.compendiumData = await CompendiumLoader.loadCompendium();
-        } catch (error) {
-            console.error("Failed to load compendium data:", error);
-            this.compendiumData = {};
+    async getData(options) {
+        const categories = await CompendiumLoader.getCategories();
+        const subcategories = this.currentCategory ? await CompendiumLoader.getSubcategories(this.currentCategory) : [];
+        const filters = await CompendiumLoader.getFilterOptions();
+
+        if (!this.currentSubcategory && subcategories.length > 0) {
+            this.currentSubcategory = subcategories[0].id;
         }
-    }
 
-    getData(options) {
-        const categories = this.getCategories();
-        const items = this.getFilteredItems();
-        const searchResults = this.getSearchResults();
-        
+        const appliedFilters = {
+            search: this.searchTerm,
+            rarity: this.filterRarity,
+            level: this.filterLevel,
+            type: this.filterType
+        };
+        const items = (this.currentCategory && this.currentSubcategory)
+            ? await CompendiumLoader.getItems(this.currentCategory, this.currentSubcategory, appliedFilters)
+            : [];
+
         return {
             categories,
+            subcategories,
             currentCategory: this.currentCategory,
             currentSubcategory: this.currentSubcategory,
-            items: searchResults.length > 0 ? searchResults : items,
+            items,
             searchTerm: this.searchTerm,
             filterRarity: this.filterRarity,
             filterLevel: this.filterLevel,
             filterType: this.filterType,
-            rarities: ['all', 'common', 'uncommon', 'rare', 'very_rare', 'legendary'],
-            levels: ['all', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-            types: this.getAvailableTypes()
+            rarities: filters.rarities,
+            levels: filters.levels,
+            types: filters.types
         };
     }
 
-    getCategories() {
-        if (!this.compendiumData) return {};
-        
-        const categories = {};
-        for (const [category, data] of Object.entries(this.compendiumData)) {
-            if (typeof data === 'object' && data !== null) {
-                categories[category] = {
-                    name: this.capitalizeFirst(category),
-                    subcategories: this.getSubcategories(category, data)
-                };
-            }
-        }
-        return categories;
-    }
-
-    getSubcategories(category, data) {
-        const subcategories = {};
-        for (const [subcategory, items] of Object.entries(data)) {
-            if (typeof items === 'object' && items !== null) {
-                subcategories[subcategory] = {
-                    name: this.capitalizeFirst(subcategory),
-                    count: Object.keys(items).length
-                };
-            }
-        }
-        return subcategories;
-    }
-
-    getFilteredItems() {
-        if (!this.compendiumData || !this.compendiumData[this.currentCategory]) return [];
-        
-        const categoryData = this.compendiumData[this.currentCategory];
-        if (!categoryData[this.currentSubcategory]) return [];
-        
-        const items = categoryData[this.currentSubcategory];
-        return Object.entries(items).map(([id, item]) => ({
-            id,
-            ...item,
-            category: this.currentCategory,
-            subcategory: this.currentSubcategory
-        })).filter(item => this.applyFilters(item));
-    }
-
-    getSearchResults() {
-        if (!this.searchTerm || !this.compendiumData) return [];
-        
-        const results = [];
-        const searchLower = this.searchTerm.toLowerCase();
-        
-        for (const [category, categoryData] of Object.entries(this.compendiumData)) {
-            for (const [subcategory, items] of Object.entries(categoryData)) {
-                if (typeof items === 'object' && items !== null) {
-                    for (const [id, item] of Object.entries(items)) {
-                        if (this.matchesSearch(item, searchLower)) {
-                            results.push({
-                                id,
-                                ...item,
-                                category,
-                                subcategory
-                            });
-                        }
-                    }
-                }
-            }
-        }
-        
-        return results.filter(item => this.applyFilters(item));
-    }
-
-    matchesSearch(item, searchTerm) {
-        const searchableFields = [
-            item.name,
-            item.description,
-            item.type,
-            item.category,
-            item.school,
-            item.damageType,
-            item.properties?.join(' '),
-            item.traits?.join(' ')
-        ].filter(Boolean);
-        
-        return searchableFields.some(field => 
-            field.toLowerCase().includes(searchTerm)
-        );
-    }
-
-    applyFilters(item) {
-        // Rarity filter
-        if (this.filterRarity !== 'all' && item.rarity !== this.filterRarity) {
-            return false;
-        }
-        
-        // Level filter
-        if (this.filterLevel !== 'all' && item.level !== parseInt(this.filterLevel)) {
-            return false;
-        }
-        
-        // Type filter
-        if (this.filterType !== 'all' && item.type !== this.filterType) {
-            return false;
-        }
-        
-        return true;
-    }
-
-    getAvailableTypes() {
-        if (!this.compendiumData) return ['all'];
-        
-        const types = new Set(['all']);
-        for (const category of Object.values(this.compendiumData)) {
-            for (const subcategory of Object.values(category)) {
-                if (typeof subcategory === 'object' && subcategory !== null) {
-                    for (const item of Object.values(subcategory)) {
-                        if (item.type) {
-                            types.add(item.type);
-                        }
-                    }
-                }
-            }
-        }
-        return Array.from(types);
-    }
+    // previous local data/utilities removed in favor of CompendiumLoader helpers
 
     capitalizeFirst(str) {
         return str.charAt(0).toUpperCase() + str.slice(1).replace(/_/g, ' ');
@@ -208,21 +91,15 @@ export class CompendiumManager extends Application {
         html.find('#add-item').on('click', this._onAddItem.bind(this));
     }
 
-    _onCategorySelect(event) {
+    async _onCategorySelect(event) {
         event.preventDefault();
-        const category = event.currentTarget.dataset.category;
-        this.currentCategory = category;
-        
-        // Set first subcategory as default
-        const categories = this.getCategories();
-        if (categories[category] && Object.keys(categories[category].subcategories).length > 0) {
-            this.currentSubcategory = Object.keys(categories[category].subcategories)[0];
-        }
-        
+        this.currentCategory = event.currentTarget.dataset.category;
+        const subs = await CompendiumLoader.getSubcategories(this.currentCategory);
+        this.currentSubcategory = subs[0]?.id || null;
         this.render(true);
     }
 
-    _onSubcategorySelect(event) {
+    async _onSubcategorySelect(event) {
         event.preventDefault();
         this.currentSubcategory = event.currentTarget.dataset.subcategory;
         this.render(true);
@@ -245,25 +122,18 @@ export class CompendiumManager extends Application {
         this.showItemDetails(itemId);
     }
 
-    showItemDetails(itemId) {
-        const item = this.findItemById(itemId);
+    async showItemDetails(itemId) {
+        if (!this.currentCategory) return;
+        const item = await CompendiumLoader.getItem(this.currentCategory, this.currentSubcategory, itemId);
         if (!item) return;
-        
         const content = this.renderItemDetails(item);
         new Dialog({
-            title: item.name,
+            title: item.name || item.id,
             content: content,
             buttons: {
-                close: {
-                    label: "Close",
-                    callback: () => {}
-                },
-                add: {
-                    label: "Add to Character",
-                    callback: () => this.addItemToCharacter(item)
-                }
+                close: { label: 'Close', callback: () => {} }
             },
-            default: "close"
+            default: 'close'
         }).render(true);
     }
 
@@ -282,7 +152,7 @@ export class CompendiumManager extends Application {
 
     renderItemDetails(item) {
         let details = `<div class="item-details">`;
-        details += `<h3>${item.name}</h3>`;
+        details += `<h3>${item.name || item.id}</h3>`;
         
         if (item.description) {
             details += `<p><strong>Description:</strong> ${item.description}</p>`;
@@ -359,7 +229,7 @@ export class CompendiumManager extends Application {
 
     async _onExport() {
         try {
-            const dataStr = JSON.stringify(this.compendiumData, null, 2);
+            const dataStr = await CompendiumLoader.exportData();
             const dataBlob = new Blob([dataStr], { type: 'application/json' });
             const url = URL.createObjectURL(dataBlob);
             
@@ -384,25 +254,22 @@ export class CompendiumManager extends Application {
         input.accept = '.json';
         input.onchange = async (event) => {
             const file = event.target.files[0];
-            if (file) {
-                try {
-                    const text = await file.text();
-                    const data = JSON.parse(text);
-                    this.compendiumData = data;
-                    this.render(true);
-                    ui.notifications.info("Compendium imported successfully!");
-                } catch (error) {
-                    console.error("Import failed:", error);
-                    ui.notifications.error("Import failed! Invalid JSON file.");
-                }
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const ok = await CompendiumLoader.importData(text);
+                if (ok) this.render(true);
+                ui.notifications.info('Compendium imported successfully!');
+            } catch (error) {
+                console.error('Import failed:', error);
+                ui.notifications.error('Import failed! Invalid JSON file.');
             }
         };
         input.click();
     }
 
     _onAddItem() {
-        // Open a dialog to add new items to the compendium
-        this.showAddItemDialog();
+        ui.notifications.info('Add Item dialog not yet implemented in new manager.');
     }
 
     showAddItemDialog() {

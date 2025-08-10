@@ -99,6 +99,8 @@ export class CharacterSheet extends ActorSheet {
 
     // Attribute roll buttons
     html.find('.attribute-roll').click(this._onAttributeRoll.bind(this));
+    // New: roll when clicking attribute labels in the new HTML
+    html.find('.attributes-grid .attribute-block > label').click(this._onAttributeLabelClick.bind(this));
 
     // Skill check buttons
     html.find('.skill-roll').click(this._onSkillRoll.bind(this));
@@ -115,9 +117,14 @@ export class CharacterSheet extends ActorSheet {
 
     // Health management
     html.find('.health-change').click(this._onHealthChange.bind(this));
+    // New: quick HP adjust via click/wheel on HP input
+    html.find('input[name="system.attributes.hp.value"]').on('click', this._onHpClick.bind(this));
+    html.find('input[name="system.attributes.hp.value"]').on('wheel', this._onHpWheel.bind(this));
 
     // Initiative roll
     html.find('.initiative-roll').click(this._onInitiativeRoll.bind(this));
+    // New: double-click combat grid to roll initiative
+    html.find('.combat-grid').on('dblclick', this._onInitiativeRoll.bind(this));
 
     // Quick dice roller
     html.find('.quick-roll').click(this._onQuickRoll.bind(this));
@@ -125,6 +132,9 @@ export class CharacterSheet extends ActorSheet {
     // Rest buttons
     html.find('.short-rest').click(this._onShortRest.bind(this));
     html.find('.long-rest').click(this._onLongRest.bind(this));
+
+    // Spells: double-click a spell card to post to chat (non-destructive)
+    html.find('.spells .spell-item').on('dblclick', this._onSpellItemActivate.bind(this));
   }
 
   async _onShowClassInfo(event) {
@@ -280,6 +290,77 @@ export class CharacterSheet extends ActorSheet {
     await game.dice.roll(`1d20+${totalBonus}`, {
       flavor: 'Initiative',
       speaker: ChatMessage.getSpeaker({ actor: this.actor })
+    });
+  }
+
+  // Map attribute label clicks to rolls
+  async _onAttributeLabelClick(event) {
+    event.preventDefault();
+    const label = event.currentTarget.textContent?.trim() || '';
+    const attribute = this._attributeLabelToKey(label);
+    if (!attribute) return;
+    const modifier = this.actor.getAttributeModifier(attribute);
+    await game.dice.rollAttributeCheck(attribute.toUpperCase(), modifier, {
+      speaker: ChatMessage.getSpeaker({ actor: this.actor })
+    });
+  }
+
+  _attributeLabelToKey(label) {
+    const map = {
+      'strength': 'str',
+      'dexterity': 'dex',
+      'endurance': 'end',
+      'intelligence': 'int',
+      'wisdom': 'wis',
+      'charisma': 'cha',
+      'health': null,
+      'critical roll': null
+    };
+    return map[label.toLowerCase()] ?? null;
+  }
+
+  async _onHpClick(event) {
+    // Ctrl-click to heal 1, Alt-click to damage 1
+    if (event.ctrlKey || event.metaKey) {
+      await this.actor.heal(1);
+    } else if (event.altKey) {
+      await this.actor.takeDamage(1);
+    }
+  }
+
+  async _onHpWheel(event) {
+    // Scroll up to heal, down to damage (Shift for x5)
+    event.preventDefault();
+    const delta = event.originalEvent?.deltaY ?? event.deltaY ?? 0;
+    const magnitude = (event.shiftKey ? 5 : 1);
+    if (delta < 0) {
+      await this.actor.heal(magnitude);
+    } else if (delta > 0) {
+      await this.actor.takeDamage(magnitude);
+    }
+  }
+
+  async _onSpellItemActivate(event) {
+    event.preventDefault();
+    const spellEl = event.currentTarget;
+    const name = spellEl.querySelector('h5')?.textContent?.trim() || 'Spell';
+    const type = spellEl.querySelector('.spell-type')?.textContent?.trim();
+    const tier = spellEl.querySelector('.spell-tier')?.textContent?.trim();
+    const cost = spellEl.querySelector('.spell-cost')?.textContent?.trim();
+    const effect = spellEl.querySelector('.spell-effect')?.textContent?.trim();
+    const scaling = spellEl.querySelector('.spell-scaling')?.textContent?.trim();
+
+    const parts = [
+      type ? `<div><strong>Type:</strong> ${type}</div>` : '',
+      tier ? `<div><strong>${tier}</strong></div>` : '',
+      cost ? `<div>${cost}</div>` : '',
+      effect ? `<div>${effect}</div>` : '',
+      scaling ? `<div>${scaling}</div>` : ''
+    ].filter(Boolean).join('');
+
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor: this.actor }),
+      content: `<div class="spell-chat"><h3>${name}</h3>${parts}</div>`
     });
   }
 

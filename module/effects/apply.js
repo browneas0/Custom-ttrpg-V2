@@ -530,8 +530,8 @@ export class EffectsManager {
       }
     });
 
-    // Listen for actor updates for status effects
-    Hooks.on('updateActor', (actor, updateData) => {
+    // Listen for actor updates for status effects and loot drops
+    Hooks.on('updateActor', async (actor, updateData) => {
       if (updateData.system?.attributes?.hp) {
         const hpChange = updateData.system.attributes.hp.value - (actor.system.attributes.hp.value || 0);
         
@@ -541,6 +541,17 @@ export class EffectsManager {
         } else if (hpChange > 0) {
           // Healing effect
           this.playEffect('healing', `[data-actor-id="${actor.id}"]`);
+        }
+
+        // Loot drop when NPC dies
+        try {
+          const newHp = updateData.system.attributes.hp.value;
+          if (actor.type === 'npc' && newHp <= 0) {
+            const { LootSystem } = await import('../automation/loot.js');
+            if (LootSystem?.dropLootForActor) await LootSystem.dropLootForActor(actor);
+          }
+        } catch (e) {
+          console.warn('Loot drop handling failed:', e);
         }
       }
     });

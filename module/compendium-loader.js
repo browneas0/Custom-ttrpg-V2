@@ -8,6 +8,33 @@ let lastLoadTime = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export class CompendiumLoader {
+  /** Normalize rarity values to system taxonomy */
+  static _normalizeRarity(raw) {
+    if (!raw) return 'simple';
+    const r = String(raw).toLowerCase().replace(/\s+/g, '-').replace(/_/g, '-');
+    if (r === 'very-rare' || r === 'veryrare' || r === 'very_rare') return 'epic';
+    if (r === 'uncommon') return 'un-common';
+    return r;
+  }
+
+  /** Apply normalization and quick action metadata to an item */
+  static _normalizeItem(category, subcategory, id, item) {
+    const copy = { id, category, subcategory, ...item };
+    if (copy.rarity) copy.rarity = this._normalizeRarity(copy.rarity);
+    // Infer action metadata used by HUD flow
+    if (copy.rangeFeet == null) {
+      const rangeStr = copy.range || copy.Range || '';
+      if (String(rangeStr).toLowerCase().includes('touch')) copy.rangeFeet = 5;
+      else {
+        const m = String(rangeStr).toLowerCase().match(/(\d+)(?:\s*\/\s*(\d+))?\s*(ft|feet)/);
+        copy.rangeFeet = m ? parseInt(m[1], 10) : 0;
+      }
+    }
+    if (copy.requiresAttack == null) {
+      copy.requiresAttack = !copy.save && (copy.type === 'weapon' || copy.category === 'items');
+    }
+    return copy;
+  }
   /**
    * Load compendium data with caching
    */
@@ -63,7 +90,7 @@ export class CompendiumLoader {
     return Object.keys(categoryData).map(subcategory => ({
       id: subcategory,
       name: this._capitalize(subcategory.replace(/_/g, ' ')),
-      count: Object.keys(categoryData[subcategory] || {}).length
+      count: this._countItemsRecursive(categoryData[subcategory])
     }));
   }
   
@@ -78,12 +105,7 @@ export class CompendiumLoader {
       return [];
     }
     
-    let items = Object.entries(categoryData[subcategory]).map(([id, item]) => ({
-      id,
-      ...item,
-      category,
-      subcategory
-    }));
+    let items = this._flattenItems(category, subcategory, categoryData[subcategory]);
     
     // Apply filters
     if (filters.search) {
@@ -96,7 +118,7 @@ export class CompendiumLoader {
     }
     
     if (filters.rarity && filters.rarity !== 'all') {
-      items = items.filter(item => item.rarity === filters.rarity);
+      items = items.filter(item => (this._normalizeRarity(item.rarity) === filters.rarity));
     }
     
     if (filters.level && filters.level !== 'all') {
@@ -117,16 +139,15 @@ export class CompendiumLoader {
     const data = await this.loadCompendiumData();
     const categoryData = data[category];
     
-    if (!categoryData || !categoryData[subcategory] || !categoryData[subcategory][itemId]) {
-      return null;
+    if (!categoryData) return null;
+    // If subcategory provided and direct hit
+    if (subcategory && categoryData[subcategory] && categoryData[subcategory][itemId]) {
+      return this._normalizeItem(category, subcategory, itemId, categoryData[subcategory][itemId]);
     }
-    
-    return {
-      id: itemId,
-      ...categoryData[subcategory][itemId],
-      category,
-      subcategory
-    };
+    // Recursive search within category
+    const found = this._findItemRecursive(categoryData, itemId, subcategory);
+    if (!found) return null;
+    return this._normalizeItem(category, found.subcategory, itemId, found.item);
   }
   
   /**
@@ -137,36 +158,15 @@ export class CompendiumLoader {
     const results = [];
     
     for (const [category, categoryData] of Object.entries(data)) {
-      for (const [subcategory, subcategoryData] of Object.entries(categoryData)) {
-        for (const [itemId, item] of Object.entries(subcategoryData)) {
-          const searchLower = searchTerm.toLowerCase();
-          if (item.name?.toLowerCase().includes(searchLower) ||
-              item.description?.toLowerCase().includes(searchLower) ||
-              item.type?.toLowerCase().includes(searchLower)) {
-            
-            const resultItem = {
-              id: itemId,
-              ...item,
-              category,
-              subcategory
-            };
-            
-            // Apply additional filters
-            let include = true;
-            if (filters.rarity && filters.rarity !== 'all') {
-              include = include && resultItem.rarity === filters.rarity;
-            }
-            if (filters.level && filters.level !== 'all') {
-              include = include && resultItem.level?.toString() === filters.level;
-            }
-            if (filters.type && filters.type !== 'all') {
-              include = include && resultItem.type === filters.type;
-            }
-            
-            if (include) {
-              results.push(resultItem);
-            }
-          }
+      const flat = this._flattenAll(category, categoryData);
+      const searchLower = searchTerm.toLowerCase();
+      for (const it of flat) {
+        if (it.name?.toLowerCase().includes(searchLower) || it.description?.toLowerCase().includes(searchLower) || it.type?.toLowerCase().includes(searchLower)) {
+          let include = true;
+          if (filters.rarity && filters.rarity !== 'all') include = include && (this._normalizeRarity(it.rarity) === filters.rarity);
+          if (filters.level && filters.level !== 'all') include = include && it.level?.toString() === filters.level;
+          if (filters.type && filters.type !== 'all') include = include && it.type === filters.type;
+          if (include) results.push(it);
         }
       }
     }
@@ -183,13 +183,12 @@ export class CompendiumLoader {
     const levels = new Set();
     const types = new Set();
     
-    for (const categoryData of Object.values(data)) {
-      for (const subcategoryData of Object.values(categoryData)) {
-        for (const item of Object.values(subcategoryData)) {
-          if (item.rarity) rarities.add(item.rarity);
-          if (item.level) levels.add(item.level.toString());
-          if (item.type) types.add(item.type);
-        }
+    for (const [category, categoryData] of Object.entries(data)) {
+      const flat = this._flattenAll(category, categoryData);
+      for (const item of flat) {
+        if (item.rarity) rarities.add(this._normalizeRarity(item.rarity));
+        if (item.level) levels.add(String(item.level));
+        if (item.type) types.add(item.type);
       }
     }
     
@@ -247,10 +246,78 @@ export class CompendiumLoader {
       return 0;
     }
     
-    let count = 0;
-    for (const subcategoryData of Object.values(categoryData)) {
-      count += Object.keys(subcategoryData || {}).length;
+    return this._countItemsRecursive(categoryData);
+  }
+
+  /** Recursively count leaf items under a node */
+  static _countItemsRecursive(node) {
+    if (!node || typeof node !== 'object') return 0;
+    // If values look like items (object with name or type), count them
+    const values = Object.values(node);
+    const looksLikeItems = values.every(v => v && typeof v === 'object' && (v.name || v.type));
+    if (looksLikeItems) return values.length;
+    // Else, recurse
+    return values.reduce((sum, v) => sum + this._countItemsRecursive(v), 0);
+  }
+
+  /** Flatten a subcategory possibly with nested groups into item array */
+  static _flattenItems(category, subcategory, node, path = []) {
+    if (!node || typeof node !== 'object') return [];
+    const out = [];
+    const entries = Object.entries(node);
+    const looksLikeItems = entries.every(([_, v]) => v && typeof v === 'object' && (v.name || v.type));
+    if (looksLikeItems) {
+      for (const [id, item] of entries) out.push(this._normalizeItem(category, subcategory, id, item));
+      return out;
     }
-    return count;
+    for (const [key, child] of entries) {
+      out.push(...this._flattenItems(category, subcategory, child, [...path, key]));
+    }
+    return out;
+  }
+
+  /** Flatten all items for a category across all subcategories and nested groups */
+  static _flattenAll(category, categoryData) {
+    const all = [];
+    for (const [subcat, node] of Object.entries(categoryData)) {
+      all.push(...this._flattenItems(category, subcat, node));
+    }
+    return all;
+  }
+
+  /** Find item by id recursively; if startSubcat provided, prefer it */
+  static _findItemRecursive(categoryNode, itemId, startSubcat) {
+    const entries = Object.entries(categoryNode);
+    const scan = (node, subcat) => {
+      if (!node || typeof node !== 'object') return null;
+      if (node[itemId] && (node[itemId].name || node[itemId].type)) {
+        return { subcategory: subcat, item: node[itemId] };
+      }
+      for (const [k, v] of Object.entries(node)) {
+        if (!v || typeof v !== 'object') continue;
+        const found = scan(v, subcat ?? k);
+        if (found) return found;
+      }
+      return null;
+    };
+    if (startSubcat && categoryNode[startSubcat]) {
+      const hit = scan(categoryNode[startSubcat], startSubcat);
+      if (hit) return hit;
+    }
+    for (const [subcat, node] of entries) {
+      const found = scan(node, subcat);
+      if (found) return found;
+    }
+    return null;
+  }
+
+  /** Get item by dotted key: category[.subgroups].id */
+  static async getByKey(key) {
+    const parts = String(key).split('.').map(p => p.trim()).filter(Boolean);
+    if (parts.length < 2) return null;
+    const category = parts[0];
+    const itemId = parts[parts.length - 1];
+    const maybeSubcat = parts.length > 2 ? parts[1] : null;
+    return await this.getItem(category, maybeSubcat, itemId);
   }
 }

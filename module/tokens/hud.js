@@ -2,6 +2,7 @@
  * Token and Scene Management System for Custom TTRPG V2
  * Handles token interactions, targeting, and scene utilities
  */
+import { CompendiumLoader } from '../compendium-loader.js';
 
 export class TokenManager {
   static targetedTokens = new Set();
@@ -528,6 +529,14 @@ export class TokenManager {
   static registerTokenActions() {
     // Add custom context menu items
     Hooks.on('getTokenHUDButtons', (hud, buttons, token) => {
+      // Use Compendium ID action (triple key: category.subcategory.id)
+      buttons.unshift({
+        name: 'use-compendium-id',
+        icon: 'fas fa-bolt',
+        label: 'Use ID',
+        onClick: () => this.showUseCompendiumDialog(token)
+      });
+
       buttons.unshift({
         name: 'quick-damage',
         icon: 'fas fa-heart-broken',
@@ -678,6 +687,9 @@ export class TokenManager {
         <button id="quick-heal-targets" class="requires-target" disabled title="Heal Targets">
           <i class="fas fa-heart"></i>
         </button>
+        <button id="quick-use-compendium" title="Use Compendium ID">
+          <i class="fas fa-bolt"></i>
+        </button>
       </div>
     `;
 
@@ -691,6 +703,12 @@ export class TokenManager {
       
       document.querySelector('#quick-heal-targets')?.addEventListener('click', () => {
         this.showTargetHealDialog();
+      });
+
+      document.querySelector('#quick-use-compendium')?.addEventListener('click', async () => {
+        const controlled = canvas.tokens.controlled?.[0];
+        if (!controlled) return ui.notifications.warn('Select your token first.');
+        this.showUseCompendiumDialog(controlled);
       });
     }
   }
@@ -746,6 +764,279 @@ export class TokenManager {
       },
       default: 'apply'
     }).render(true);
+  }
+
+  /**
+   * Prompt user to enter a compendium key and execute it.
+   * Key formats supported:
+   * - category.subcategory.id
+   * - category.id (subcategory optional)
+   */
+  static showUseCompendiumDialog(originToken) {
+    const content = `
+      <form>
+        <div class="form-group">
+          <label>Compendium Key (category[.subcategory].id)</label>
+          <input type="text" id="compendium-key" placeholder="e.g., spells.fireball or items.weapons.sword"/>
+        </div>
+      </form>
+    `;
+
+    new Dialog({
+      title: `Use Compendium Entry - ${originToken.name}`,
+      content,
+      buttons: {
+        use: {
+          icon: '<i class="fas fa-bolt"></i>',
+          label: 'Use',
+          callback: async html => {
+            const key = (html.find('#compendium-key').val() || '').trim();
+            if (!key) return ui.notifications.warn('Enter a compendium key.');
+            await this.useCompendiumEntryByKey(originToken, key);
+          }
+        },
+        cancel: { icon: '<i class="fas fa-times"></i>', label: 'Cancel' }
+      },
+      default: 'use'
+    }).render(true);
+  }
+
+  /**
+   * Parse compendium key into { category, subcategory, id }
+   */
+  static parseCompendiumKey(key) {
+    const parts = key.split('.').map(p => p.trim()).filter(Boolean);
+    if (parts.length === 3) {
+      return { category: parts[0], subcategory: parts[1], id: parts[2] };
+    }
+    if (parts.length === 2) {
+      // subcategory omitted
+      return { category: parts[0], subcategory: null, id: parts[1] };
+    }
+    return { category: parts[0] || null, subcategory: null, id: null };
+  }
+
+  /**
+   * Load compendium item by key with flexible subcategory handling.
+   */
+  static async getCompendiumItem(key) {
+    const { category, subcategory, id } = this.parseCompendiumKey(key);
+    if (!category || !id) return null;
+
+    // Try direct (category + subcategory)
+    if (subcategory) {
+      const item = await CompendiumLoader.getItem(category, subcategory, id);
+      if (item) return item;
+    }
+
+    // Fallback: scan all subcategories under category
+    const data = await CompendiumLoader.loadCompendiumData();
+    const categoryData = data?.[category];
+    if (!categoryData) return null;
+
+    // Case 1: Items stored directly at category level
+    if (categoryData[id]) {
+      return { id, ...categoryData[id], category, subcategory: null };
+    }
+
+    // Case 2: Map of subcategories
+    for (const [subcat, items] of Object.entries(categoryData)) {
+      if (items && typeof items === 'object' && id in items) {
+        return { id, ...items[id], category, subcategory: subcat };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Main executor: use compendium entry by key from a token.
+   */
+  static async useCompendiumEntryByKey(originToken, key) {
+    try {
+      const item = await this.getCompendiumItem(key);
+      if (!item) return ui.notifications.error(`Compendium item not found for key: ${key}`);
+
+      // Step 1: Requirement checks (resources/cooldowns) - minimal scaffold
+      const canUse = await this._checkBasicRequirements(originToken, item);
+      if (!canUse) return;
+
+      // Step 2: Select targets in range (if applicable)
+      const rangeFeet = this._inferRangeFeet(item);
+      let selectedTargets = [];
+      if (rangeFeet > 0) {
+        const inRange = this._getTokensInRange(originToken, rangeFeet);
+        selectedTargets = await this._promptSelectTargets(inRange);
+        if (!selectedTargets || selectedTargets.length === 0) {
+          return ui.notifications.warn('No targets selected.');
+        }
+      }
+
+      // Step 3: Post chat summary
+      await this._postActionChatCard(originToken, item, selectedTargets);
+
+      // Step 4: Attack/save resolution and effects
+      await this._resolveAndApply(originToken, item, selectedTargets);
+
+    } catch (e) {
+      console.error('Use Compendium Entry failed:', e);
+      ui.notifications.error(`Failed to use compendium entry: ${e.message}`);
+    }
+  }
+
+  static async _checkBasicRequirements(originToken, item) {
+    // Placeholder for resource/cooldown checks; always true for now
+    return true;
+  }
+
+  static _inferRangeFeet(item) {
+    // Prefer explicit rangeFeet; else parse common range strings
+    if (typeof item.rangeFeet === 'number') return item.rangeFeet;
+    const rangeStr = item.range || item.Range || '';
+    if (!rangeStr) return 0;
+    // Examples: "5ft", "150/600ft", "60 feet", "Touch"
+    const lower = String(rangeStr).toLowerCase();
+    if (lower.includes('touch')) return 5;
+    const match = lower.match(/(\d+)(?:\s*\/\s*(\d+))?\s*(ft|feet)/);
+    if (match) return parseInt(match[1], 10) || 0;
+    return 0;
+  }
+
+  static _getTokensInRange(originToken, rangeFeet) {
+    const origin = originToken;
+    return canvas.tokens.placeables.filter(t => {
+      if (!t?.actor || t.id === origin.id) return false;
+      const d = canvas.grid.measureDistance(origin, t);
+      return d <= rangeFeet;
+    });
+  }
+
+  static _promptSelectTargets(tokens) {
+    return new Promise(resolve => {
+      if (!tokens || tokens.length === 0) return resolve([]);
+      const list = tokens.map(t => `
+        <label style="display:flex;align-items:center;gap:6px;margin:4px 0;">
+          <input type="checkbox" class="target-choice" data-token-id="${t.id}" checked />
+          <span>${t.name}</span>
+        </label>
+      `).join('');
+      const content = `<div><p>Select targets in range:</p>${list}</div>`;
+      new Dialog({
+        title: 'Select Targets',
+        content,
+        buttons: {
+          ok: {
+            icon: '<i class="fas fa-check"></i>',
+            label: 'Confirm',
+            callback: html => {
+              const ids = Array.from(html[0].querySelectorAll('.target-choice:checked')).map(i => i.dataset.tokenId);
+              resolve(ids.map(id => canvas.tokens.get(id)).filter(Boolean));
+            }
+          },
+          cancel: {
+            icon: '<i class="fas fa-times"></i>',
+            label: 'Cancel',
+            callback: () => resolve([])
+          }
+        },
+        default: 'ok'
+      }).render(true);
+    });
+  }
+
+  static async _postActionChatCard(originToken, item, targets) {
+    const parts = [];
+    if (item.type) parts.push(`<div><strong>Type:</strong> ${item.type}</div>`);
+    if (item.level !== undefined) parts.push(`<div><strong>Level:</strong> ${item.level}</div>`);
+    if (item.description) parts.push(`<div>${item.description}</div>`);
+    if (targets?.length) parts.push(`<div><strong>Targets:</strong> ${targets.map(t => t.name).join(', ')}</div>`);
+
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ token: originToken, actor: originToken.actor }),
+      content: `<div class="spell-chat"><h3>${item.name || item.id}</h3>${parts.join('')}</div>`
+    });
+  }
+
+  static async _resolveAndApply(originToken, item, targets) {
+    if (!targets || targets.length === 0) return;
+
+    const requiresAttack = item.requiresAttack === true || (!item.save && (item.category === 'items' || item.type === 'weapon'));
+
+    if (requiresAttack) {
+      const attackBonus = originToken.actor?.system?.combat?.attackBonus || 0;
+      for (const target of targets) {
+        const roll = await game.dice.roll(`1d20+${attackBonus}`, {
+          flavor: `${originToken.name} Attack Roll`,
+          speaker: ChatMessage.getSpeaker({ token: originToken })
+        });
+        const total = roll?.total ?? roll?.result ?? 0;
+        const targetAC = target.actor?.system?.combat?.ac
+          ?? target.actor?.system?.combat?.defense
+          ?? 10;
+        if (total >= targetAC) {
+          this._showHitFloat(target);
+          await this._applyOnHit(item, originToken, [target]);
+        } else {
+          this._showMissFloat(target);
+          await this._applyOnMiss(item, originToken, [target]);
+        }
+      }
+    } else {
+      // Non-attack actions (e.g., AoE spells, saves not implemented yet): apply default effect
+      await this._applyOnHit(item, originToken, targets);
+    }
+  }
+
+  static _showHitFloat(token) {
+    const txt = this.createFloatingText(token, 'HIT', '#44ff44');
+    this.animateFloatingText(txt, 'hit');
+  }
+
+  static _showMissFloat(token) {
+    const txt = this.createFloatingText(token, 'MISS', '#ff4444');
+    this.animateFloatingText(txt, 'miss');
+  }
+
+  static async _applyOnHit(item, originToken, targets) {
+    if (Array.isArray(item.onHit?.effects) && item.onHit.effects.length > 0) {
+      await this._applyEffectsArray(item.onHit.effects, originToken, targets);
+      return;
+    }
+    // Fallbacks: damage or healing fields directly on item
+    if (item.damage) {
+      const damageType = item.damageType || 'physical';
+      const roll = await game.dice.roll(String(item.damage), { flavor: `${item.name || item.id} damage` });
+      for (const t of targets) await t.actor?.takeDamage(roll.total || 0, damageType);
+    } else if (item.healing) {
+      const roll = isNaN(Number(item.healing)) ? await game.dice.roll(String(item.healing), { flavor: `${item.name || item.id} healing` }) : { total: Number(item.healing) };
+      for (const t of targets) await t.actor?.heal(roll.total || 0);
+    }
+  }
+
+  static async _applyOnMiss(item, originToken, targets) {
+    if (Array.isArray(item.onMiss?.effects) && item.onMiss.effects.length > 0) {
+      await this._applyEffectsArray(item.onMiss.effects, originToken, targets);
+    }
+  }
+
+  static async _applyEffectsArray(effects, originToken, targets) {
+    for (const effect of effects) {
+      switch (effect.type) {
+        case 'damage': {
+          const dmgType = effect.damageType || 'physical';
+          const roll = await game.dice.roll(String(effect.value), { flavor: `${originToken.name} deals ${dmgType}` });
+          for (const t of targets) await t.actor?.takeDamage(roll.total || 0, dmgType);
+          break;
+        }
+        case 'heal': {
+          const roll = isNaN(Number(effect.value)) ? await game.dice.roll(String(effect.value), { flavor: `${originToken.name} heals` }) : { total: Number(effect.value) };
+          for (const t of targets) await t.actor?.heal(roll.total || 0);
+          break;
+        }
+        // Future: buff/debuff/status, resource, etc.
+        default:
+          console.warn('Unknown effect type:', effect);
+      }
+    }
   }
 
   /**

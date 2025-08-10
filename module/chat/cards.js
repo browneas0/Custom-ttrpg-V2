@@ -187,6 +187,64 @@ export class ChatCommands {
     });
 
     // Utility commands
+    this.registerCommand('detectmagic', {
+      description: 'Detect magical auras on targeted NPCs (glimpse of loot)',
+      usage: '/detectmagic',
+      category: 'utility',
+      execute: async (args, options) => {
+        const targets = game.tokens?.getTargetedTokens?.() || [];
+        if (targets.length === 0) return 'No targets selected.';
+        const lines = [];
+        for (const t of targets) {
+          const actor = t.actor;
+          if (!actor || actor.type !== 'npc') continue;
+          const inv = actor.system?.inventory || {};
+          const magical = [];
+          Object.values(inv).forEach(category => {
+            if (!Array.isArray(category)) return;
+            category.forEach(item => {
+              if (!item?.equipped) return;
+              const rarity = (item.rarity || '').toLowerCase();
+              const type = (item.type || '').toLowerCase();
+              const looksMagical = ['uncommon','rare','very_rare','legendary','epic'].includes(rarity) || ['wondrous_item','ring','scroll','wand','rod','staff','potion'].includes(type) || (Array.isArray(item.properties) && item.properties.length > 0);
+              if (looksMagical) magical.push(item.name || item.id);
+            });
+          });
+          lines.push(`${actor.name}: ${magical.length ? magical.join(', ') : 'No strong auras'}`);
+        }
+        return lines.join('<br>');
+      }
+    });
+
+    this.registerCommand('identify', {
+      description: 'Identify a single equipped item of a targeted NPC',
+      usage: '/identify',
+      category: 'utility',
+      execute: async (args, options) => {
+        const targets = game.tokens?.getTargetedTokens?.() || [];
+        if (targets.length === 0) return 'No targets selected.';
+        const t = targets[0];
+        const actor = t.actor;
+        if (!actor || actor.type !== 'npc') return 'Target is not an NPC.';
+        const inv = actor.system?.inventory || {};
+        const equipped = [];
+        Object.values(inv).forEach(category => {
+          if (!Array.isArray(category)) return;
+          category.forEach(item => { if (item?.equipped) equipped.push(item); });
+        });
+        if (equipped.length === 0) return `${actor.name} has nothing equipped.`;
+        const item = equipped[Math.floor(Math.random() * equipped.length)];
+        const parts = [
+          `<strong>${item.name || item.id}</strong>`,
+          item.type ? `Type: ${item.type}` : '',
+          item.rarity ? `Rarity: ${item.rarity}` : '',
+          item.damage ? `Damage: ${item.damage}${item.damageType ? ' ('+item.damageType+')' : ''}` : '',
+          item.ac ? `AC: ${item.ac}` : '',
+          item.description ? `${item.description}` : ''
+        ].filter(Boolean).join('<br>');
+        return parts;
+      }
+    });
     this.registerCommand('help', {
       description: 'Show available commands',
       usage: '/help [command]',

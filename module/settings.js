@@ -231,6 +231,30 @@ export class SettingsManager {
       config: true
     });
 
+    // Loot & Rarity Settings
+    this.registerCategory('loot', {
+      name: 'Loot & Rarity',
+      icon: 'fas fa-gem',
+      description: 'Loot drop chances and rarity thresholds'
+    });
+
+    this.registerSetting('loot', 'rarityChances', {
+      name: 'Rarity Drop Chances',
+      hint: 'JSON map of rarity -> chance (0-1). Keys: simple, common, un-common, rare, epic, mythic, legendary',
+      type: String,
+      default: JSON.stringify({
+        simple: 0.8,
+        common: 0.6,
+        'un-common': 0.45,
+        rare: 0.25,
+        epic: 0.12,
+        mythic: 0.08,
+        legendary: 0.05
+      }),
+      scope: 'world',
+      config: true
+    });
+
     // UI Settings
     this.registerCategory('ui', {
       name: 'User Interface',

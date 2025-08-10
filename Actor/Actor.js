@@ -48,6 +48,8 @@ export class CustomActor extends Actor {
     this._calculateCarryingCapacity(actorData);
     this._calculateSkillBonuses(actorData);
     this._applyClassFeatures(actorData);
+    this._applyEquipmentBonuses(actorData);
+    this._applyEquipmentSpellSlots(actorData);
   }
 
   /**
@@ -162,6 +164,76 @@ export class CustomActor extends Actor {
     });
     
     actorData.combat.ac = ac;
+  }
+
+  /**
+   * Apply equipment-based bonuses to combat stats (attack/damage)
+   */
+  _applyEquipmentBonuses(actorData) {
+    const weapons = actorData.inventory.weapons?.filter(w => w.equipped) || [];
+    const strMod = Math.floor(((actorData.attributes.str?.value ?? 10) - 10) / 2);
+    const dexMod = Math.floor(((actorData.attributes.dex?.value ?? 10) - 10) / 2);
+
+    let bestAttack = actorData.combat.attackBonus || 0;
+    let bestDamage = actorData.combat.damageBonus || 0;
+
+    for (const weapon of weapons) {
+      const isRanged = (weapon.category || '').toLowerCase() === 'ranged' || weapon.properties?.includes('thrown');
+      const finesse = weapon.properties?.includes('finesse');
+      const attrMod = finesse ? Math.max(strMod, dexMod) : (isRanged ? dexMod : strMod);
+
+      const proficiency = this.isProficientWith(weapon.name || weapon.id, 'weapons') ? (actorData.combat.proficiencyBonus || 0) : 0;
+      const weaponAttack = (weapon.attackBonus || 0) + attrMod + proficiency;
+      const weaponDamage = (weapon.damageBonus || 0) + attrMod;
+
+      if (weaponAttack > bestAttack) bestAttack = weaponAttack;
+      if (weaponDamage > bestDamage) bestDamage = weaponDamage;
+    }
+
+    actorData.combat.attackBonus = bestAttack;
+    actorData.combat.damageBonus = bestDamage;
+  }
+
+  /**
+   * Apply equipment-based spell slot bonuses to resources.spellSlots
+   */
+  _applyEquipmentSpellSlots(actorData) {
+    const resources = actorData.resources || {};
+    const spellSlots = resources.spellSlots;
+    if (!spellSlots || !spellSlots.slots) return;
+
+    // Aggregate bonuses from equipped items exposing spellSlotsBonus: { level:number, bonus:number }[] or object map
+    const equippedItems = [];
+    Object.entries(actorData.inventory).forEach(([category, list]) => {
+      if (!Array.isArray(list)) return;
+      for (const item of list) {
+        if (item?.equipped) equippedItems.push(item);
+      }
+    });
+
+    const bonuses = {};
+    for (const item of equippedItems) {
+      const bonus = item.spellSlotsBonus;
+      if (!bonus) continue;
+      if (Array.isArray(bonus)) {
+        for (const entry of bonus) {
+          const lvl = String(entry.level);
+          bonuses[lvl] = (bonuses[lvl] || 0) + (entry.bonus || 0);
+        }
+      } else if (typeof bonus === 'object') {
+        for (const [lvl, amount] of Object.entries(bonus)) {
+          bonuses[String(lvl)] = (bonuses[String(lvl)] || 0) + (Number(amount) || 0);
+        }
+      }
+    }
+
+    // Apply bonuses to max, clamp value to new max
+    Object.entries(bonuses).forEach(([lvl, add]) => {
+      const slot = spellSlots.slots[lvl];
+      if (!slot) return;
+      slot.max = (slot.max || 0) + add;
+      slot.value = Math.min(slot.value, slot.max);
+    });
   }
 
   /**
