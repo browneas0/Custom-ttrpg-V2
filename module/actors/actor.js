@@ -489,3 +489,5 @@ export class CustomActor extends Actor {
     ui.notifications.info(`${this.name} reaches level ${newLevel}!`);
   }
 }
+
+

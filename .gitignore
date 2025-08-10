@@ -16,6 +16,7 @@
 
 # Icon packs and nested duplicates
 Icons/**
+icons/**
 Custom-ttrpg-V2-main/**
 
 # Build and logs

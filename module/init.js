@@ -6,7 +6,7 @@ import { InventoryManager } from './applications/inventory-manager.js';
 import { EquipmentManager } from './applications/equipment-manager.js';
 import { AbilitiesManager } from './applications/abilities-manager.js';
 import { ResetSettingsApp } from './applications/reset-settings.js';
-import { CustomActor } from '../Actor/Actor.js';
+import { CustomActor } from './actors/actor.js';
 import { CharacterSheet } from './sheets/character-sheet.js';
 import { NPCSheet } from './sheets/npc-sheet.js';
 import { preloadClassInfo } from './class-loader.js';
