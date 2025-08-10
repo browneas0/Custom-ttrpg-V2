@@ -68,6 +68,9 @@ export class InventoryManager extends Application {
     
     // Item selection
     html.find('.item-entry').click(this._onItemSelect.bind(this));
+    // Enable dragging items out to character sheet drop zone
+    html.find('.item-entry').attr('draggable', 'true');
+    html.find('.item-entry').on('dragstart', this._onDragStart.bind(this));
     
     // Add item button
     html.find('#add-item-btn').click(this._onAddItem.bind(this));
@@ -81,6 +84,27 @@ export class InventoryManager extends Application {
     
     // Currency management
     html.find('.currency-input').change(this._onCurrencyChange.bind(this));
+    // Double-click to equip/unequip
+    html.find('.item-entry').on('dblclick', (e) => this._onToggleEquipQuick(e));
+
+    // Overweight warning on open
+    try {
+      const cap = this._calculateCarryingCapacity(this.actor.system);
+      const wt = this._calculateCurrentWeight(this.getData().inventory);
+      if (wt > cap) ui.notifications.warn(`Over capacity: ${wt}/${cap} lbs`);
+    } catch (_) {}
+  }
+
+  _onDragStart(event) {
+    const el = event.currentTarget;
+    const itemId = el.dataset.itemId;
+    const category = el.dataset.category;
+    const inventory = this.getData().inventory;
+    const item = (inventory[category] || []).find(i => i.id === itemId);
+    if (!item) return;
+    const payload = { __cttType: 'item', item };
+    event.originalEvent?.dataTransfer?.setData('application/json', JSON.stringify(payload));
+    event.originalEvent?.dataTransfer?.setData('text/plain', itemId);
   }
 
   async _onItemSelect(event) {
@@ -181,6 +205,13 @@ export class InventoryManager extends Application {
     
     this.render(true);
     ui.notifications.info(`Added ${itemData.name} to inventory!`);
+
+    // Overweight check
+    try {
+      const cap = this._calculateCarryingCapacity(this.actor.system);
+      const wt = this._calculateCurrentWeight(inventory);
+      if (wt > cap) ui.notifications.warn(`Over capacity: ${wt}/${cap} lbs`);
+    } catch (_) {}
   }
 
   async _onRemoveItem(event) {
@@ -229,7 +260,8 @@ export class InventoryManager extends Application {
     // Find the item and toggle equipped status
     const item = inventory[category].find(i => i.id === this.selectedItem.id);
     if (item) {
-      item.equipped = !item.equipped;
+      item.equipped = true;
+      await this._applyToEquipmentSlots(item);
       
       await this.actor.update({
         'system.inventory': inventory
@@ -244,8 +276,59 @@ export class InventoryManager extends Application {
   }
 
   async _onUnequipItem(event) {
-    // This is handled by _onEquipItem as a toggle
-    this._onEquipItem(event);
+    event.preventDefault();
+    if (!this.selectedItem) return;
+    const actorData = this.actor.system;
+    const inventory = actorData.inventory;
+    const category = this.selectedItem.category;
+    const item = inventory[category].find(i => i.id === this.selectedItem.id);
+    if (!item) return;
+    item.equipped = false;
+    await this._removeFromEquipmentSlots(item);
+    await this.actor.update({ 'system.inventory': inventory });
+    this.selectedItem.equipped = false;
+    this.render(true);
+  }
+
+  async _onToggleEquipQuick(event) {
+    const el = event.currentTarget;
+    const itemId = el.dataset.itemId;
+    const category = el.dataset.category;
+    const inventory = this.getData().inventory;
+    const item = (inventory[category] || []).find(i => i.id === itemId);
+    if (!item) return;
+    this.selectedItem = { ...item, category };
+    if (item.equipped) return this._onUnequipItem(event);
+    return this._onEquipItem(event);
+  }
+
+  async _applyToEquipmentSlots(item) {
+    const equipment = foundry.utils.deepClone(this.actor.system.equipment || {});
+    // Naive slot mapping like on sheet
+    const map = [
+      { slot: 'mainHand', types: ['weapon'] },
+      { slot: 'offHand', types: ['shield','weapon'] },
+      { slot: 'head', types: ['helmet','head','armor'] },
+      { slot: 'chest', types: ['chest','armor'] },
+      { slot: 'legs', types: ['legs','armor'] },
+      { slot: 'feet', types: ['boots','feet','armor'] },
+      { slot: 'ring1', types: ['ring'] },
+      { slot: 'ring2', types: ['ring'] },
+      { slot: 'trinket1', types: ['trinket','accessory'] },
+      { slot: 'magicItem', types: ['magic','accessory'] }
+    ];
+    const t = (item.type || '').toLowerCase();
+    const target = map.find(m => m.types.includes(t));
+    if (target) equipment[target.slot] = item;
+    await this.actor.update({ 'system.equipment': equipment });
+  }
+
+  async _removeFromEquipmentSlots(item) {
+    const equipment = foundry.utils.deepClone(this.actor.system.equipment || {});
+    for (const [slot, v] of Object.entries(equipment)) {
+      if (v && (v.id === item.id || v.name === item.name)) equipment[slot] = null;
+    }
+    await this.actor.update({ 'system.equipment': equipment });
   }
 
   async _onCurrencyChange(event) {

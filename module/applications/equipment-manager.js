@@ -4,7 +4,7 @@ export class EquipmentManager extends Application {
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
             id: "equipment-manager",
-            template: "templates/applications/equipment-manager.html",
+            template: `systems/${game.system.id}/templates/applications/equipment-manager.html`,
             title: "Equipment Manager",
             width: 900,
             height: 700,
@@ -176,8 +176,11 @@ export class EquipmentManager extends Application {
 
     _onItemDragStart(event) {
         const itemId = event.currentTarget.dataset.itemId;
-        this.draggedItem = this.getItemById(itemId);
+        const item = this.getItemById(itemId);
+        this.draggedItem = item;
+        // Provide both id and structured payload for sheet drop
         event.dataTransfer.setData('text/plain', itemId);
+        event.dataTransfer.setData('application/json', JSON.stringify({ __cttType: 'item', item }));
         event.dataTransfer.effectAllowed = 'move';
     }
 
@@ -259,22 +262,23 @@ export class EquipmentManager extends Application {
         const itemType = item.type;
         
         const compatibility = {
-            head: ['armor', 'helmet'],
+            head: ['armor', 'helmet', 'head'],
             neck: ['accessory', 'necklace'],
-            shoulders: ['armor', 'pauldrons'],
-            chest: ['armor', 'chestplate'],
+            shoulders: ['armor', 'pauldrons', 'shoulders'],
+            chest: ['armor', 'chestplate', 'chest'],
             back: ['armor', 'cloak'],
-            wrists: ['armor', 'bracers'],
-            hands: ['armor', 'gauntlets'],
-            waist: ['armor', 'belt'],
-            legs: ['armor', 'greaves'],
-            feet: ['armor', 'boots'],
+            wrists: ['armor', 'bracers', 'wrists'],
+            hands: ['armor', 'gauntlets', 'hands'],
+            waist: ['armor', 'belt', 'waist'],
+            legs: ['armor', 'greaves', 'legs'],
+            feet: ['armor', 'boots', 'feet'],
             mainHand: ['weapon', 'sword', 'axe', 'mace', 'staff', 'wand'],
             offHand: ['weapon', 'shield', 'sword', 'axe', 'mace', 'staff', 'wand'],
             ring1: ['accessory', 'ring'],
             ring2: ['accessory', 'ring'],
             trinket1: ['accessory', 'trinket'],
-            trinket2: ['accessory', 'trinket']
+            trinket2: ['accessory', 'trinket'],
+            ranged: ['weapon', 'bow', 'crossbow', 'gun', 'ranged']
         };
 
         return compatibility[slot]?.includes(itemType) || false;

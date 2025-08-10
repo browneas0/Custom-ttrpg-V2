@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "checkJs": true,
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "foundry": [
+        "node_modules/foundry-vtt-types/types/index.d.ts"
+      ]
+    }
+  },
+  "include": [
+    "module/**/*",
+    "typings/**/*"
+  ]
+}

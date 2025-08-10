@@ -29,6 +29,13 @@
   font-family: 'Roboto', sans-serif;
 }
 
+.custom-sheet.light-theme{
+  --ctt-background: #f8f9fb;
+  --ctt-foreground: #222;
+  --ctt-light-bg: #ffffff;
+  --ctt-border: #cbd5e1;
+}
+
 /* Header Styling */
 .sheet-header {
   background: var(--ctt-light-bg);
@@ -59,6 +66,24 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+/* Class Info button */
+.class-level-info #ctt-btn-info {
+  background: var(--ctt-primary);
+  color: var(--ctt-foreground);
+  border: 1px solid var(--ctt-border);
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.class-level-info #ctt-btn-info:hover {
+  background: var(--ctt-accent);
 }
 
 .class-display {
@@ -108,6 +133,78 @@
   background: var(--ctt-primary);
   border-bottom: 2px solid var(--ctt-primary);
 }
+
+/* Inventory drop zone */
+.drop-zone {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 2px dashed var(--ctt-border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255,255,255,0.02);
+  color: var(--ctt-foreground);
+}
+.drop-zone.drag-over {
+  border-color: var(--ctt-primary);
+  background: rgba(52,152,219,0.1);
+}
+.sheet-inventory-list .sheet-inv-category { margin-top: 1rem; }
+.sheet-inventory-list .sheet-inv-items { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 6px; }
+.sheet-inv-item { background: var(--ctt-light-bg); border: 1px solid var(--ctt-border); border-radius: 4px; padding: 6px 8px; display: flex; align-items: center; gap: 8px; }
+.sheet-inv-item .badge { margin-left: auto; background: var(--ctt-primary); color:#fff; border-radius: 4px; padding: 2px 6px; font-size: 0.75rem; }
+
+/* Equipment grid on character sheet */
+.equipment-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 1rem 0; }
+.equip-slot { background: var(--ctt-light-bg); border: 1px solid var(--ctt-border); border-radius: 6px; padding: 8px; min-height: 64px; display: flex; flex-direction: column; gap: 6px; transition: border-color 0.2s, background 0.2s; }
+.equip-slot .slot-unequip { align-self: flex-end; background: transparent; border: 1px solid var(--ctt-border); color: var(--ctt-foreground); border-radius: 4px; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.equip-slot .slot-unequip:hover { border-color: var(--ctt-primary); color: var(--ctt-primary); }
+.equip-slot .slot-auto { align-self: flex-end; background: transparent; border: 1px dashed var(--ctt-border); color: var(--ctt-foreground); border-radius: 4px; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.equip-slot .slot-auto:hover { border-color: var(--ctt-accent); color: var(--ctt-accent); }
+.equip-slot .slot-pick { align-self: flex-end; background: transparent; border: 1px dotted var(--ctt-border); color: var(--ctt-foreground); border-radius: 4px; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.equip-slot .slot-pick:hover { border-color: var(--ctt-primary); color: var(--ctt-primary); }
+.equip-slot .slot-compare { align-self: flex-end; background: transparent; border: 1px solid transparent; color: var(--ctt-foreground); border-radius: 4px; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.equip-slot .slot-compare:hover { color: var(--ctt-accent); }
+.equip-slot .slot-label { font-weight: bold; color: var(--ctt-accent); font-size: 0.9rem; }
+.equip-slot .slot-item { color: var(--ctt-foreground); opacity: 0.85; }
+.equip-slot.drag-over { background: rgba(52,152,219,0.08); }
+.equip-slot.allowed { border-color: #2ecc71; box-shadow: 0 0 0 2px rgba(46,204,113,0.15) inset; }
+.equip-slot.not-allowed { border-color: #e74c3c; box-shadow: 0 0 0 2px rgba(231,76,60,0.15) inset; }
+.equipment-bonus-summary { background: var(--ctt-light-bg); border: 1px solid var(--ctt-border); border-radius: 6px; padding: 10px; }
+.equip-actions{ display:flex; gap:6px; margin-bottom:8px; }
+.equipment-bonus-summary .bonus-list { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 6px; }
+.equipment-bonus-summary .bonus-row { display:flex; justify-content: space-between; }
+.equipment-bonus-summary .set-bonuses { margin-top: 8px; }
+/* Weight warning */
+.inventory-manager .weight-section .weight-bar { position: relative; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; }
+.inventory-manager .weight-section .weight-fill { height: 100%; background: linear-gradient(90deg, #2ecc71, #f39c12, #e74c3c); }
+.inventory-manager .weight-section .weight-text { margin-top: 4px; text-align: right; font-size: 0.9rem; }
+.equipment-bonus-summary .set-bonuses h4 { margin: 6px 0; color: var(--ctt-primary); }
+.equipment-bonus-summary .set-list { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 4px; }
+.equipment-bonus-summary .set-descs { margin-top: 6px; font-size: 0.85rem; color: #cfd3e0; }
+.equipment-bonus-summary .set-desc-item { padding: 2px 0; }
+.equipment-bonus-summary .set-info{ background:transparent; border:1px solid var(--ctt-border); color:var(--ctt-foreground); border-radius:4px; width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; margin-left:6px; }
+.equipment-bonus-summary .set-info:hover{ border-color: var(--ctt-primary); color: var(--ctt-primary); }
+
+/* Equipped item tooltip */
+.equip-tooltip {
+  position: absolute;
+  z-index: 10000;
+  background: #151826;
+  color: #e8e8e8;
+  border: 1px solid #4a90e2;
+  border-radius: 6px;
+  padding: 8px 10px;
+  min-width: 220px;
+  max-width: 320px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+  pointer-events: none;
+}
+.equip-tooltip .tt-name { font-weight: 700; color: #4a90e2; margin-bottom: 4px; }
+.equip-tooltip .tt-type { font-size: 0.85rem; color: #b0b0b0; margin-bottom: 6px; }
+.equip-tooltip .tt-stats { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; font-size: 0.9rem; }
+.equip-tooltip .tt-desc { margin-top: 6px; font-size: 0.85rem; color: #cfd3e0; opacity: 0.9; }
 
 /* Section Headers */
 h3 {
@@ -253,6 +350,30 @@ h3 {
   text-align: center;
 }
 
+/* Abilities on sheet */
+.sheet-abilities-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.sheet-ability-item { background: var(--ctt-light-bg); border: 1px solid var(--ctt-border); border-radius: 8px; padding: 10px; }
+.sheet-ability-header { display:flex; justify-content: space-between; align-items:center; gap:8px; margin-bottom:6px; }
+.sheet-ability-name { font-weight:700; color: var(--ctt-primary); }
+.sheet-ability-meta .badge { background: rgba(255,255,255,0.08); border:1px solid var(--ctt-border); border-radius:4px; padding:2px 6px; margin-left:4px; font-size:0.75rem; }
+.sheet-ability-desc { font-size: 0.9rem; color: var(--ctt-foreground); opacity: 0.9; margin-bottom: 6px; }
+.sheet-ability-bottom { display:flex; justify-content: space-between; align-items:center; gap:8px; }
+.sheet-ability-costs { display:flex; flex-wrap:wrap; gap:6px; }
+.cost-chip { background: rgba(255,215,0,0.12); border:1px solid #ffd70055; color:#ffd700; border-radius: 12px; padding: 2px 8px; font-size:0.75rem; }
+.cd-chip { background: rgba(255,136,0,0.12); border:1px solid #ff880055; color:#ffb369; border-radius: 12px; padding: 2px 8px; font-size:0.75rem; }
+.sheet-ability-actions { display:flex; gap:6px; }
+
+/* Feats on sheet */
+.sheet-feats { display:grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap:10px; }
+.sheet-feat-item { background: var(--ctt-light-bg); border:1px solid var(--ctt-border); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px; }
+.sheet-feat-head { display:flex; justify-content:space-between; align-items:center; }
+.sheet-feat-head .name { font-weight:700; color: var(--ctt-primary); }
+.sheet-feat-head .badge { background: rgba(255,255,255,0.08); border:1px solid var(--ctt-border); border-radius:4px; padding:2px 6px; font-size:0.75rem; }
+.sheet-feat-item .desc { opacity:0.9; font-size:0.9rem; }
+.sheet-feat-item .benefits { margin:0; padding-left:18px; }
+.sheet-feat-item .actions { display:flex; align-items:center; gap:6px; }
+.sheet-feat-item .toggle { display:flex; align-items:center; gap:6px; }
+
 /* Buttons */
 .ctt-btn {
   background-color: var(--ctt-primary);
@@ -270,6 +391,10 @@ h3 {
   background-color: var(--ctt-accent);
   outline: none;
 }
+
+/* Chat roll cards */
+.ctt-roll-card { line-height: 1.4; }
+.ctt-roll-card .muted { opacity: 0.75; font-size: 0.85rem; }
 
 /* Actor Directory Buttons */
 .directory-header .ctt-btn {
